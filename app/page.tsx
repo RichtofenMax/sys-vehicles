@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Shield,
   PoundSterling,
@@ -22,6 +22,7 @@ import {
   Settings,
   Check,
 } from "lucide-react";
+import { DEFAULT_CARS } from "@/lib/cars-data";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,96 +39,8 @@ type Car = {
   badge: string;
   photoId: string;
   category: string[];
+  status: "available" | "sold" | "reserved";
 };
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const CARS: Car[] = [
-  {
-    id: 1,
-    make: "BMW",
-    model: "3 Series M Sport",
-    year: 2021,
-    price: 21995,
-    mileage: "34,000",
-    fuel: "Petrol",
-    transmission: "Automatic",
-    color: "Black Sapphire",
-    badge: "Hot Deal",
-    photoId: "1555215695-3d98bc139570",
-    category: ["all", "10k-20k"],
-  },
-  {
-    id: 2,
-    make: "Mercedes-Benz",
-    model: "C-Class AMG Line",
-    year: 2020,
-    price: 18995,
-    mileage: "42,000",
-    fuel: "Diesel",
-    transmission: "Automatic",
-    color: "Polar White",
-    badge: "Finance from £299/mo",
-    photoId: "1606664515524-f6d6fc4b8e5e",
-    category: ["all", "10k-20k"],
-  },
-  {
-    id: 3,
-    make: "Audi",
-    model: "A4 S Line",
-    year: 2022,
-    price: 24495,
-    mileage: "21,000",
-    fuel: "Diesel",
-    transmission: "Automatic",
-    color: "Monsoon Grey",
-    badge: "Nearly New",
-    photoId: "1503376780353-7e6692767b70",
-    category: ["all", "over20k"],
-  },
-  {
-    id: 4,
-    make: "Ford",
-    model: "Mustang Mach-E",
-    year: 2022,
-    price: 29995,
-    mileage: "18,000",
-    fuel: "Electric",
-    transmission: "Automatic",
-    color: "Cyber Orange",
-    badge: "Electric",
-    photoId: "1558981806-ec527fa84c39",
-    category: ["all", "over20k", "electric"],
-  },
-  {
-    id: 5,
-    make: "Volkswagen",
-    model: "Golf GTI",
-    year: 2021,
-    price: 22995,
-    mileage: "28,000",
-    fuel: "Petrol",
-    transmission: "Manual",
-    color: "Tornado Red",
-    badge: "",
-    photoId: "1552519507-da3b142c7d7a",
-    category: ["all", "over20k"],
-  },
-  {
-    id: 6,
-    make: "Range Rover",
-    model: "Evoque R-Dynamic",
-    year: 2021,
-    price: 34995,
-    mileage: "31,000",
-    fuel: "Diesel",
-    transmission: "Automatic",
-    color: "Carpathian Grey",
-    badge: "Premium",
-    photoId: "1558618666-fcd25c85cd64",
-    category: ["all", "over20k", "suv"],
-  },
-];
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -148,11 +61,15 @@ function calcMonthly(price: number, deposit: number, months: number) {
   return (((price - deposit) * 1.069) / months).toFixed(0);
 }
 
+const STORAGE_KEY = "sys-cars";
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function CarCard({ car }: { car: Car }) {
   const [imgError, setImgError] = useState(false);
   const monthly = calcMonthly(car.price, 2000, 36);
+  const isUnavailable = car.status === "sold" || car.status === "reserved";
+  const buttonLabel = car.status === "sold" ? "Sold" : car.status === "reserved" ? "Reserved" : "View Details";
 
   return (
     <div
@@ -166,7 +83,7 @@ function CarCard({ car }: { car: Car }) {
       className="group hover:-translate-y-1"
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow =
-          "0 8px 32px rgba(245,158,11,0.12)";
+          "0 8px 32px rgba(220,38,38,0.12)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
@@ -208,7 +125,7 @@ function CarCard({ car }: { car: Car }) {
               background:
                 car.badge === "Electric"
                   ? "#3b82f6"
-                  : "rgba(245,158,11,0.9)",
+                  : "rgba(220,38,38,0.9)",
               color: "#fff",
               fontSize: "11px",
               fontWeight: 700,
@@ -219,6 +136,32 @@ function CarCard({ car }: { car: Car }) {
           >
             {car.badge}
           </span>
+        )}
+        {car.status !== "available" && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.65)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span
+              style={{
+                background: car.status === "sold" ? "#dc2626" : "#f59e0b",
+                color: "#fff",
+                fontWeight: 900,
+                fontSize: "20px",
+                padding: "8px 24px",
+                borderRadius: "8px",
+                letterSpacing: "0.08em",
+              }}
+            >
+              {car.status === "sold" ? "SOLD" : "RESERVED"}
+            </span>
+          </div>
         )}
       </div>
 
@@ -278,24 +221,26 @@ function CarCard({ car }: { car: Car }) {
         <button
           style={{
             width: "100%",
-            background: "#f59e0b",
+            background: "#dc2626",
             color: "#09090f",
             border: "none",
             borderRadius: "10px",
             padding: "10px",
             fontWeight: 700,
             fontSize: "14px",
-            cursor: "pointer",
+            cursor: isUnavailable ? "not-allowed" : "pointer",
             transition: "background 0.2s",
+            opacity: isUnavailable ? 0.4 : 1,
+            pointerEvents: isUnavailable ? "none" : "auto",
           }}
           onMouseEnter={(e) =>
-            ((e.currentTarget as HTMLButtonElement).style.background = "#d97706")
+            ((e.currentTarget as HTMLButtonElement).style.background = "#b91c1c")
           }
           onMouseLeave={(e) =>
-            ((e.currentTarget as HTMLButtonElement).style.background = "#f59e0b")
+            ((e.currentTarget as HTMLButtonElement).style.background = "#dc2626")
           }
         >
-          View Details
+          {buttonLabel}
         </button>
       </div>
     </div>
@@ -306,6 +251,7 @@ function CarCard({ car }: { car: Car }) {
 
 export default function SYSVehiclesPage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cars, setCars] = useState<Car[]>(DEFAULT_CARS as Car[]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [carPrice, setCarPrice] = useState(20000);
   const [deposit, setDeposit] = useState(2000);
@@ -319,20 +265,35 @@ export default function SYSVehiclesPage() {
     message: "",
   });
 
+  useEffect(() => {
+    const savedCars = localStorage.getItem(STORAGE_KEY);
+    if (!savedCars) {
+      setCars(DEFAULT_CARS as Car[]);
+      return;
+    }
+
+    try {
+      const parsedCars = JSON.parse(savedCars) as Car[];
+      setCars(parsedCars);
+    } catch {
+      setCars(DEFAULT_CARS as Car[]);
+    }
+  }, []);
+
   const filteredCars =
     activeFilter === "all"
-      ? CARS
+      ? cars
       : activeFilter === "under10k"
-      ? CARS.filter((c) => c.price < 10000)
+      ? cars.filter((c) => c.price < 10000)
       : activeFilter === "10k-20k"
-      ? CARS.filter((c) => c.price >= 10000 && c.price <= 20000)
+      ? cars.filter((c) => c.price >= 10000 && c.price <= 20000)
       : activeFilter === "over20k"
-      ? CARS.filter((c) => c.price > 20000)
+      ? cars.filter((c) => c.price > 20000)
       : activeFilter === "electric"
-      ? CARS.filter((c) => c.fuel === "Electric")
+      ? cars.filter((c) => c.fuel === "Electric")
       : activeFilter === "suv"
-      ? CARS.filter((c) => c.category.includes("suv"))
-      : CARS;
+      ? cars.filter((c) => c.category.includes("suv"))
+      : cars;
 
   const monthly = calcMonthly(carPrice, deposit, term);
 
@@ -372,27 +333,11 @@ export default function SYSVehiclesPage() {
         >
           {/* Logo */}
           <a href="#" style={{ textDecoration: "none", flexShrink: 0 }}>
-            <span
-              style={{
-                fontSize: "22px",
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                color: "#f59e0b",
-              }}
-            >
-              SYS
-            </span>
-            <span
-              style={{
-                fontSize: "22px",
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                color: "#fff",
-                marginLeft: "4px",
-              }}
-            >
-              VEHICLES
-            </span>
+            <img
+              src="/sys-logo.jpg"
+              alt="SYS Automotives"
+              style={{ height: "48px", width: "auto", objectFit: "contain" }}
+            />
           </a>
 
           {/* Desktop Nav */}
@@ -442,13 +387,13 @@ export default function SYSVehiclesPage() {
                 gap: "6px",
               }}
             >
-              <Phone size={14} style={{ color: "#f59e0b" }} />
+              <Phone size={14} style={{ color: "#dc2626" }} />
               0114 XXX XXXX
             </a>
             <a
               href="#contact"
               style={{
-                background: "#f59e0b",
+                background: "#dc2626",
                 color: "#09090f",
                 padding: "8px 20px",
                 borderRadius: "8px",
@@ -459,11 +404,11 @@ export default function SYSVehiclesPage() {
               }}
               onMouseEnter={(e) =>
                 ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#d97706")
+                  "#b91c1c")
               }
               onMouseLeave={(e) =>
                 ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#f59e0b")
+                  "#dc2626")
               }
             >
               Enquire Now
@@ -525,7 +470,7 @@ export default function SYSVehiclesPage() {
               <a
                 href="tel:01142XXXXXX"
                 style={{
-                  color: "#f59e0b",
+                  color: "#dc2626",
                   textDecoration: "none",
                   fontWeight: 600,
                   display: "flex",
@@ -539,7 +484,7 @@ export default function SYSVehiclesPage() {
                 href="#contact"
                 onClick={() => setMenuOpen(false)}
                 style={{
-                  background: "#f59e0b",
+                  background: "#dc2626",
                   color: "#09090f",
                   padding: "12px 20px",
                   borderRadius: "8px",
@@ -578,7 +523,7 @@ export default function SYSVehiclesPage() {
             width: "600px",
             height: "600px",
             background:
-              "radial-gradient(circle, rgba(245,158,11,0.10) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(220,38,38,0.10) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -610,8 +555,8 @@ export default function SYSVehiclesPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              background: "rgba(245,158,11,0.1)",
-              border: "1px solid rgba(245,158,11,0.2)",
+              background: "rgba(220,38,38,0.1)",
+              border: "1px solid rgba(220,38,38,0.2)",
               borderRadius: "999px",
               padding: "6px 16px",
               marginBottom: "32px",
@@ -622,13 +567,13 @@ export default function SYSVehiclesPage() {
                 width: "6px",
                 height: "6px",
                 borderRadius: "50%",
-                background: "#f59e0b",
+                background: "#dc2626",
                 display: "inline-block",
               }}
             />
             <span
               style={{
-                color: "#f59e0b",
+                color: "#dc2626",
                 fontSize: "13px",
                 fontWeight: 600,
                 letterSpacing: "0.06em",
@@ -652,7 +597,7 @@ export default function SYSVehiclesPage() {
             <span
               style={{
                 display: "block",
-                background: "linear-gradient(90deg, #f59e0b, #d97706)",
+                background: "linear-gradient(90deg, #dc2626, #b91c1c)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -692,7 +637,7 @@ export default function SYSVehiclesPage() {
             <a
               href="#cars"
               style={{
-                background: "#f59e0b",
+                background: "#dc2626",
                 color: "#09090f",
                 padding: "14px 32px",
                 borderRadius: "10px",
@@ -706,13 +651,13 @@ export default function SYSVehiclesPage() {
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.background =
-                  "#d97706";
+                  "#b91c1c";
                 (e.currentTarget as HTMLAnchorElement).style.transform =
                   "translateY(-1px)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.background =
-                  "#f59e0b";
+                  "#dc2626";
                 (e.currentTarget as HTMLAnchorElement).style.transform =
                   "translateY(0)";
               }}
@@ -779,7 +724,7 @@ export default function SYSVehiclesPage() {
                   style={{
                     fontSize: "22px",
                     fontWeight: 800,
-                    color: "#f59e0b",
+                    color: "#dc2626",
                   }}
                 >
                   {stat.val}
@@ -802,7 +747,7 @@ export default function SYSVehiclesPage() {
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <div
             style={{
-              color: "#f59e0b",
+              color: "#dc2626",
               fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "0.12em",
@@ -856,13 +801,13 @@ export default function SYSVehiclesPage() {
                 border: "1px solid",
                 borderColor:
                   activeFilter === f.key
-                    ? "#f59e0b"
+                    ? "#dc2626"
                     : "rgba(255,255,255,0.1)",
                 background:
                   activeFilter === f.key
-                    ? "rgba(245,158,11,0.15)"
+                    ? "rgba(220,38,38,0.15)"
                     : "transparent",
-                color: activeFilter === f.key ? "#f59e0b" : "#94a3b8",
+                color: activeFilter === f.key ? "#dc2626" : "#94a3b8",
                 fontWeight: 600,
                 fontSize: "13px",
                 cursor: "pointer",
@@ -885,7 +830,7 @@ export default function SYSVehiclesPage() {
             }}
           >
             No vehicles in this category currently. Check back soon or{" "}
-            <a href="#contact" style={{ color: "#f59e0b" }}>
+            <a href="#contact" style={{ color: "#dc2626" }}>
               enquire directly
             </a>
             .
@@ -918,7 +863,7 @@ export default function SYSVehiclesPage() {
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
             <div
               style={{
-                color: "#f59e0b",
+                color: "#dc2626",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -961,22 +906,22 @@ export default function SYSVehiclesPage() {
           >
             {[
               {
-                icon: <Shield size={24} color="#f59e0b" />,
+                icon: <Shield size={24} color="#dc2626" />,
                 title: "Exactly As Described",
                 desc: "Every car is thoroughly inspected and listed honestly. Clean, well-maintained vehicles — no hidden surprises, no exaggeration.",
               },
               {
-                icon: <PoundSterling size={24} color="#f59e0b" />,
+                icon: <PoundSterling size={24} color="#dc2626" />,
                 title: "Flexible Finance",
                 desc: "Rates from 6.9% APR with decisions in minutes. We'll find a plan that works for you — straightforward, stress-free, same-day drive away.",
               },
               {
-                icon: <RefreshCw size={24} color="#f59e0b" />,
+                icon: <RefreshCw size={24} color="#dc2626" />,
                 title: "Hassle-Free Part Exchange",
                 desc: "Fair valuations and instant offers. We'll beat any written quote — no pressure, no haggling, just a smooth handover.",
               },
               {
-                icon: <Star size={24} color="#f59e0b" />,
+                icon: <Star size={24} color="#dc2626" />,
                 title: "Friendly, Knowledgeable Team",
                 desc: "Clear communication from first enquiry to keys in hand. Our team knows their cars and is always happy to help without the pushy sales pitch.",
               },
@@ -993,7 +938,7 @@ export default function SYSVehiclesPage() {
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(245,158,11,0.3)";
+                    "rgba(220,38,38,0.3)";
                   (e.currentTarget as HTMLDivElement).style.transform =
                     "translateY(-2px)";
                 }}
@@ -1008,7 +953,7 @@ export default function SYSVehiclesPage() {
                   style={{
                     width: "48px",
                     height: "48px",
-                    background: "rgba(245,158,11,0.12)",
+                    background: "rgba(220,38,38,0.12)",
                     borderRadius: "12px",
                     display: "flex",
                     alignItems: "center",
@@ -1052,7 +997,7 @@ export default function SYSVehiclesPage() {
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <div
               style={{
-                color: "#f59e0b",
+                color: "#dc2626",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -1098,7 +1043,7 @@ export default function SYSVehiclesPage() {
                 <label style={{ color: "#94a3b8", fontSize: "14px", fontWeight: 600 }}>
                   Car Price
                 </label>
-                <span style={{ color: "#f59e0b", fontWeight: 700, fontSize: "16px" }}>
+                <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "16px" }}>
                   {formatPrice(carPrice)}
                 </span>
               </div>
@@ -1109,7 +1054,7 @@ export default function SYSVehiclesPage() {
                 step={500}
                 value={carPrice}
                 onChange={(e) => setCarPrice(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "#f59e0b", cursor: "pointer" }}
+                style={{ width: "100%", accentColor: "#dc2626", cursor: "pointer" }}
               />
               <div
                 style={{
@@ -1135,7 +1080,7 @@ export default function SYSVehiclesPage() {
                 <label style={{ color: "#94a3b8", fontSize: "14px", fontWeight: 600 }}>
                   Deposit
                 </label>
-                <span style={{ color: "#f59e0b", fontWeight: 700, fontSize: "16px" }}>
+                <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "16px" }}>
                   {formatPrice(deposit)}
                 </span>
               </div>
@@ -1146,7 +1091,7 @@ export default function SYSVehiclesPage() {
                 step={500}
                 value={deposit}
                 onChange={(e) => setDeposit(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "#f59e0b", cursor: "pointer" }}
+                style={{ width: "100%", accentColor: "#dc2626", cursor: "pointer" }}
               />
               <div
                 style={{
@@ -1184,10 +1129,10 @@ export default function SYSVehiclesPage() {
                       borderRadius: "10px",
                       border: "1px solid",
                       borderColor:
-                        term === t ? "#f59e0b" : "rgba(255,255,255,0.1)",
+                        term === t ? "#dc2626" : "rgba(255,255,255,0.1)",
                       background:
-                        term === t ? "rgba(245,158,11,0.15)" : "transparent",
-                      color: term === t ? "#f59e0b" : "#94a3b8",
+                        term === t ? "rgba(220,38,38,0.15)" : "transparent",
+                      color: term === t ? "#dc2626" : "#94a3b8",
                       fontWeight: 700,
                       fontSize: "14px",
                       cursor: "pointer",
@@ -1204,8 +1149,8 @@ export default function SYSVehiclesPage() {
             <div
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05))",
-                border: "1px solid rgba(245,158,11,0.2)",
+                  "linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05))",
+                border: "1px solid rgba(220,38,38,0.2)",
                 borderRadius: "14px",
                 padding: "24px",
                 textAlign: "center",
@@ -1219,7 +1164,7 @@ export default function SYSVehiclesPage() {
                 style={{
                   fontSize: "48px",
                   fontWeight: 900,
-                  color: "#f59e0b",
+                  color: "#dc2626",
                   letterSpacing: "-0.02em",
                 }}
               >
@@ -1236,7 +1181,7 @@ export default function SYSVehiclesPage() {
               style={{
                 display: "block",
                 width: "100%",
-                background: "#f59e0b",
+                background: "#dc2626",
                 color: "#09090f",
                 padding: "14px",
                 borderRadius: "10px",
@@ -1248,11 +1193,11 @@ export default function SYSVehiclesPage() {
               }}
               onMouseEnter={(e) =>
                 ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#d97706")
+                  "#b91c1c")
               }
               onMouseLeave={(e) =>
                 ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#f59e0b")
+                  "#dc2626")
               }
             >
               Apply for Finance
@@ -1272,7 +1217,7 @@ export default function SYSVehiclesPage() {
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
             <div
               style={{
-                color: "#f59e0b",
+                color: "#dc2626",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -1336,7 +1281,7 @@ export default function SYSVehiclesPage() {
                   style={{
                     fontSize: "72px",
                     lineHeight: 0.8,
-                    color: "#f59e0b",
+                    color: "#dc2626",
                     opacity: 0.3,
                     fontWeight: 900,
                     marginBottom: "12px",
@@ -1366,8 +1311,8 @@ export default function SYSVehiclesPage() {
                     <Star
                       key={s}
                       size={14}
-                      fill="#f59e0b"
-                      color="#f59e0b"
+                      fill="#dc2626"
+                      color="#dc2626"
                     />
                   ))}
                 </div>
@@ -1404,7 +1349,7 @@ export default function SYSVehiclesPage() {
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
             <div
               style={{
-                color: "#f59e0b",
+                color: "#dc2626",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -1480,8 +1425,8 @@ export default function SYSVehiclesPage() {
                     style={{
                       marginTop: "24px",
                       background: "transparent",
-                      color: "#f59e0b",
-                      border: "1px solid #f59e0b",
+                      color: "#dc2626",
+                      border: "1px solid #dc2626",
                       padding: "10px 24px",
                       borderRadius: "8px",
                       cursor: "pointer",
@@ -1550,7 +1495,7 @@ export default function SYSVehiclesPage() {
                         }}
                         onFocus={(e) =>
                           ((e.currentTarget as HTMLInputElement).style.borderColor =
-                            "rgba(245,158,11,0.5)")
+                            "rgba(220,38,38,0.5)")
                         }
                         onBlur={(e) =>
                           ((e.currentTarget as HTMLInputElement).style.borderColor =
@@ -1593,7 +1538,7 @@ export default function SYSVehiclesPage() {
                       }}
                       onFocus={(e) =>
                         ((e.currentTarget as HTMLTextAreaElement).style.borderColor =
-                          "rgba(245,158,11,0.5)")
+                          "rgba(220,38,38,0.5)")
                       }
                       onBlur={(e) =>
                         ((e.currentTarget as HTMLTextAreaElement).style.borderColor =
@@ -1606,7 +1551,7 @@ export default function SYSVehiclesPage() {
                     type="submit"
                     style={{
                       width: "100%",
-                      background: "#f59e0b",
+                      background: "#dc2626",
                       color: "#09090f",
                       border: "none",
                       borderRadius: "10px",
@@ -1618,11 +1563,11 @@ export default function SYSVehiclesPage() {
                     }}
                     onMouseEnter={(e) =>
                       ((e.currentTarget as HTMLButtonElement).style.background =
-                        "#d97706")
+                        "#b91c1c")
                     }
                     onMouseLeave={(e) =>
                       ((e.currentTarget as HTMLButtonElement).style.background =
-                        "#f59e0b")
+                        "#dc2626")
                     }
                   >
                     Send Enquiry
@@ -1654,19 +1599,19 @@ export default function SYSVehiclesPage() {
                 </h3>
                 {[
                   {
-                    icon: <MapPin size={16} color="#f59e0b" />,
+                    icon: <MapPin size={16} color="#dc2626" />,
                     lines: ["Babur Rd, Sheffield", "S4 7PY, United Kingdom"],
                   },
                   {
-                    icon: <Phone size={16} color="#f59e0b" />,
+                    icon: <Phone size={16} color="#dc2626" />,
                     lines: ["0114 XXX XXXX"],
                   },
                   {
-                    icon: <Mail size={16} color="#f59e0b" />,
+                    icon: <Mail size={16} color="#dc2626" />,
                     lines: ["info@sysvehicles.co.uk"],
                   },
                   {
-                    icon: <Clock size={16} color="#f59e0b" />,
+                    icon: <Clock size={16} color="#dc2626" />,
                     lines: [
                       "Mon–Fri: 9am – 6pm",
                       "Sat: 9am – 5pm",
@@ -1732,11 +1677,11 @@ export default function SYSVehiclesPage() {
                       }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(245,158,11,0.15)";
+                          "rgba(220,38,38,0.15)";
                         (e.currentTarget as HTMLButtonElement).style.color =
-                          "#f59e0b";
+                          "#dc2626";
                         (e.currentTarget as HTMLButtonElement).style.borderColor =
-                          "rgba(245,158,11,0.3)";
+                          "rgba(220,38,38,0.3)";
                       }}
                       onMouseLeave={(e) => {
                         (e.currentTarget as HTMLButtonElement).style.background =
@@ -1769,7 +1714,7 @@ export default function SYSVehiclesPage() {
                     "linear-gradient(135deg, #111118, #1a1a26)",
                 }}
               >
-                <MapPin size={36} color="#f59e0b" />
+                <MapPin size={36} color="#dc2626" />
                 <div style={{ textAlign: "center" }}>
                   <div
                     style={{
@@ -1812,27 +1757,11 @@ export default function SYSVehiclesPage() {
           {/* Brand */}
           <div>
             <div style={{ marginBottom: "12px" }}>
-              <span
-                style={{
-                  fontSize: "22px",
-                  fontWeight: 900,
-                  letterSpacing: "0.08em",
-                  color: "#f59e0b",
-                }}
-              >
-                SYS
-              </span>
-              <span
-                style={{
-                  fontSize: "22px",
-                  fontWeight: 900,
-                  letterSpacing: "0.08em",
-                  color: "#fff",
-                  marginLeft: "4px",
-                }}
-              >
-                VEHICLES
-              </span>
+              <img
+                src="/sys-logo.jpg"
+                alt="SYS Automotives"
+                style={{ height: "48px", width: "auto", objectFit: "contain" }}
+              />
             </div>
             <p style={{ color: "#64748b", fontSize: "13px", lineHeight: 1.65 }}>
               Your trusted Sheffield car dealer. Clean, well-maintained cars —
@@ -1868,7 +1797,7 @@ export default function SYSVehiclesPage() {
                   }}
                   onMouseEnter={(e) =>
                     ((e.currentTarget as HTMLAnchorElement).style.color =
-                      "#f59e0b")
+                      "#dc2626")
                   }
                   onMouseLeave={(e) =>
                     ((e.currentTarget as HTMLAnchorElement).style.color =
