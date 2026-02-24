@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import {
   Shield,
-  PoundSterling,
-  RefreshCw,
   Star,
   Phone,
   Mail,
@@ -253,9 +251,6 @@ export default function SYSVehiclesPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cars, setCars] = useState<Car[]>(DEFAULT_CARS as Car[]);
   const [activeFilter, setActiveFilter] = useState("all");
-  const [carPrice, setCarPrice] = useState(20000);
-  const [deposit, setDeposit] = useState(2000);
-  const [term, setTerm] = useState(36);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -295,14 +290,13 @@ export default function SYSVehiclesPage() {
       ? cars.filter((c) => c.category.includes("suv"))
       : cars;
 
-  const monthly = calcMonthly(carPrice, deposit, term);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitted(true);
   };
 
-  const navLinks = ["Cars", "Finance", "Part Exchange", "About", "Contact"];
+  const navLinks = ["Cars", "About", "Contact"];
 
   return (
     <div style={{ background: "#09090f", minHeight: "100vh" }}>
@@ -621,8 +615,7 @@ export default function SYSVehiclesPage() {
             }}
           >
             Premium used cars — clean, well-maintained, and exactly as described.
-            Finance available, part exchange welcome. Sheffield's honest, friendly
-            dealer on Babur Road.
+            Sheffield's honest, friendly dealer on Babur Road.
           </p>
 
           {/* CTAs */}
@@ -664,34 +657,6 @@ export default function SYSVehiclesPage() {
             >
               Browse Our Cars <ChevronRight size={16} />
             </a>
-            <a
-              href="#finance"
-              style={{
-                background: "transparent",
-                color: "#fff",
-                padding: "14px 32px",
-                borderRadius: "10px",
-                fontWeight: 700,
-                fontSize: "15px",
-                textDecoration: "none",
-                border: "1px solid rgba(255,255,255,0.2)",
-                transition: "border-color 0.2s, transform 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                  "rgba(255,255,255,0.5)";
-                (e.currentTarget as HTMLAnchorElement).style.transform =
-                  "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                  "rgba(255,255,255,0.2)";
-                (e.currentTarget as HTMLAnchorElement).style.transform =
-                  "translateY(0)";
-              }}
-            >
-              Get Finance Quote
-            </a>
           </div>
 
           {/* Stats strip */}
@@ -709,8 +674,6 @@ export default function SYSVehiclesPage() {
             {[
               { val: "500+", label: "Cars Sold" },
               { val: "4.9★", label: "Rating" },
-              { val: "0%", label: "Finance Available" },
-              { val: "Free", label: "Part Exchange" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -911,16 +874,6 @@ export default function SYSVehiclesPage() {
                 desc: "Every car is thoroughly inspected and listed honestly. Clean, well-maintained vehicles — no hidden surprises, no exaggeration.",
               },
               {
-                icon: <PoundSterling size={24} color="#dc2626" />,
-                title: "Flexible Finance",
-                desc: "Rates from 6.9% APR with decisions in minutes. We'll find a plan that works for you — straightforward, stress-free, same-day drive away.",
-              },
-              {
-                icon: <RefreshCw size={24} color="#dc2626" />,
-                title: "Hassle-Free Part Exchange",
-                desc: "Fair valuations and instant offers. We'll beat any written quote — no pressure, no haggling, just a smooth handover.",
-              },
-              {
                 icon: <Star size={24} color="#dc2626" />,
                 title: "Friendly, Knowledgeable Team",
                 desc: "Clear communication from first enquiry to keys in hand. Our team knows their cars and is always happy to help without the pushy sales pitch.",
@@ -982,231 +935,8 @@ export default function SYSVehiclesPage() {
         </div>
       </section>
 
-      {/* ── SECTION 5: Finance Calculator ────────────────────────────────── */}
-      <section
-        id="finance"
-        style={{ padding: "96px 24px" }}
-      >
-        <div
-          style={{
-            maxWidth: "680px",
-            margin: "0 auto",
-          }}
-        >
-          {/* Heading */}
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <div
-              style={{
-                color: "#dc2626",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                marginBottom: "10px",
-              }}
-            >
-              HOW MUCH WILL IT COST?
-            </div>
-            <h2
-              style={{
-                fontSize: "clamp(28px, 4vw, 44px)",
-                fontWeight: 900,
-                color: "#fff",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Finance Calculator
-            </h2>
-            <p style={{ color: "#94a3b8", marginTop: "10px", fontSize: "15px" }}>
-              Get an instant estimate — adjust the sliders to match your budget.
-            </p>
-          </div>
 
-          {/* Calculator Card */}
-          <div
-            style={{
-              background: "#111118",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "20px",
-              padding: "36px",
-            }}
-          >
-            {/* Car Price */}
-            <div style={{ marginBottom: "28px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "10px",
-                }}
-              >
-                <label style={{ color: "#94a3b8", fontSize: "14px", fontWeight: 600 }}>
-                  Car Price
-                </label>
-                <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "16px" }}>
-                  {formatPrice(carPrice)}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={5000}
-                max={50000}
-                step={500}
-                value={carPrice}
-                onChange={(e) => setCarPrice(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "#dc2626", cursor: "pointer" }}
-              />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: "4px",
-                }}
-              >
-                <span style={{ color: "#475569", fontSize: "11px" }}>£5,000</span>
-                <span style={{ color: "#475569", fontSize: "11px" }}>£50,000</span>
-              </div>
-            </div>
-
-            {/* Deposit */}
-            <div style={{ marginBottom: "28px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "10px",
-                }}
-              >
-                <label style={{ color: "#94a3b8", fontSize: "14px", fontWeight: 600 }}>
-                  Deposit
-                </label>
-                <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "16px" }}>
-                  {formatPrice(deposit)}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={10000}
-                step={500}
-                value={deposit}
-                onChange={(e) => setDeposit(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "#dc2626", cursor: "pointer" }}
-              />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: "4px",
-                }}
-              >
-                <span style={{ color: "#475569", fontSize: "11px" }}>£0</span>
-                <span style={{ color: "#475569", fontSize: "11px" }}>£10,000</span>
-              </div>
-            </div>
-
-            {/* Term */}
-            <div style={{ marginBottom: "36px" }}>
-              <label
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  display: "block",
-                  marginBottom: "12px",
-                }}
-              >
-                Loan Term
-              </label>
-              <div style={{ display: "flex", gap: "10px" }}>
-                {[24, 36, 48].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTerm(t)}
-                    style={{
-                      flex: 1,
-                      padding: "10px",
-                      borderRadius: "10px",
-                      border: "1px solid",
-                      borderColor:
-                        term === t ? "#dc2626" : "rgba(255,255,255,0.1)",
-                      background:
-                        term === t ? "rgba(220,38,38,0.15)" : "transparent",
-                      color: term === t ? "#dc2626" : "#94a3b8",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    {t} mo
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Result */}
-            <div
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05))",
-                border: "1px solid rgba(220,38,38,0.2)",
-                borderRadius: "14px",
-                padding: "24px",
-                textAlign: "center",
-                marginBottom: "24px",
-              }}
-            >
-              <div style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "8px" }}>
-                Estimated Monthly Payment
-              </div>
-              <div
-                style={{
-                  fontSize: "48px",
-                  fontWeight: 900,
-                  color: "#dc2626",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                £{monthly}
-              </div>
-              <div style={{ color: "#64748b", fontSize: "12px", marginTop: "8px" }}>
-                Representative APR: 6.9% · Based on {formatPrice(carPrice)} with{" "}
-                {formatPrice(deposit)} deposit over {term} months
-              </div>
-            </div>
-
-            <a
-              href="#contact"
-              style={{
-                display: "block",
-                width: "100%",
-                background: "#dc2626",
-                color: "#09090f",
-                padding: "14px",
-                borderRadius: "10px",
-                fontWeight: 700,
-                fontSize: "15px",
-                textDecoration: "none",
-                textAlign: "center",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#b91c1c")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#dc2626")
-              }
-            >
-              Apply for Finance
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 6: Testimonials ───────────────────────────────────────── */}
+            {/* ── SECTION 6: Testimonials ───────────────────────────────────────── */}
       <section
         style={{
           background: "#111118",
@@ -1782,7 +1512,7 @@ export default function SYSVehiclesPage() {
             >
               Quick Links
             </h4>
-            {["Cars", "Finance", "Part Exchange", "About", "Contact"].map(
+            {["Cars", "About", "Contact"].map(
               (link) => (
                 <a
                   key={link}
@@ -1830,9 +1560,8 @@ export default function SYSVehiclesPage() {
                 lineHeight: 1.7,
               }}
             >
-              SYS Vehicles is a credit broker, not a lender. Representative APR
-              6.9%. Finance is subject to status. Written quotations available on
-              request.
+              All vehicles are sold as seen. SYS Vehicles Ltd, Sheffield.
+              Company registration available on request.
             </p>
           </div>
         </div>
