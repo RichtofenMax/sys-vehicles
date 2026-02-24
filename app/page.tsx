@@ -370,7 +370,7 @@ export default function SYSVehiclesPage() {
             className="hidden md:flex"
           >
             <a
-              href="tel:01142XXXXXX"
+              href="tel:07427691258"
               style={{
                 color: "#94a3b8",
                 textDecoration: "none",
@@ -382,7 +382,7 @@ export default function SYSVehiclesPage() {
               }}
             >
               <Phone size={14} style={{ color: "#dc2626" }} />
-              0114 XXX XXXX
+              07427 691258
             </a>
             <a
               href="#contact"
@@ -462,7 +462,7 @@ export default function SYSVehiclesPage() {
               }}
             >
               <a
-                href="tel:01142XXXXXX"
+                href="tel:07427691258"
                 style={{
                   color: "#dc2626",
                   textDecoration: "none",
@@ -472,7 +472,7 @@ export default function SYSVehiclesPage() {
                   gap: "8px",
                 }}
               >
-                <Phone size={16} /> 0114 XXX XXXX
+                <Phone size={16} /> 07427 691258
               </a>
               <a
                 href="#contact"
@@ -1334,7 +1334,7 @@ export default function SYSVehiclesPage() {
                   },
                   {
                     icon: <Phone size={16} color="#dc2626" />,
-                    lines: ["0114 XXX XXXX"],
+                    lines: ["07427 691258"],
                   },
                   {
                     icon: <Mail size={16} color="#dc2626" />,
