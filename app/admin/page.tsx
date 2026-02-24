@@ -100,6 +100,11 @@ export default function AdminPage() {
     setCars((prev) => prev.map((car) => (car.id === id ? { ...car, status } : car)));
   };
 
+  const deleteCar = (id: number) => {
+    if (!confirm("Remove this car from the listing?")) return;
+    setCars((prev) => prev.filter((car) => car.id !== id));
+  };
+
   const handleAddCar = (e: FormEvent) => {
     e.preventDefault();
 
@@ -192,6 +197,9 @@ export default function AdminPage() {
                     </button>
                     <button onClick={() => updateStatus(car.id, "sold")} style={{ background: car.status === "sold" ? "#dc2626" : "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer" }}>
                       Sold
+                    </button>
+                    <button onClick={() => deleteCar(car.id)} style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", marginLeft: "4px" }}>
+                      🗑 Remove
                     </button>
                   </td>
                 </tr>
