@@ -979,21 +979,21 @@ export default function SYSVehiclesPage() {
             {[
               {
                 quote:
-                  "Bought my BMW 3 Series from SYS and the whole process was completely stress-free. The car was immaculate — exactly as described online. Honest team, fair price, and I drove away same day. Wouldn't hesitate to recommend.",
-                name: "Tariq M.",
-                city: "Sheffield",
+                  "Stress free car buying, SYS kept me informed every step of the delivery process and the car is great.",
+                name: "Mckenzie Collier",
+                city: "Google Review",
               },
               {
                 quote:
-                  "Wide variety of cars to choose from and the team really knew their stuff. They were friendly, not pushy at all, and communication was brilliant from start to finish. Got a great deal on my Range Rover — finance sorted in under 20 minutes.",
-                name: "Sarah K.",
-                city: "Rotherham",
+                  "I had an excellent experience with SYS Vehicles. From the very beginning, the team were professional, friendly, and transparent.",
+                name: "Isaac Tesfay",
+                city: "Google Review",
               },
               {
                 quote:
-                  "Part-exchanged my old Golf and got a fair valuation without any back-and-forth. Everything was smooth and efficient. The car I picked up was spotless and in perfect condition — exactly what was advertised. Highly recommended.",
-                name: "James W.",
-                city: "Sheffield",
+                  "Very good car, no complaints and it came just as described.",
+                name: "Sofonies Yohannes",
+                city: "Google Review",
               },
             ].map((t) => (
               <div
@@ -1066,6 +1066,36 @@ export default function SYSVehiclesPage() {
                 </div>
               </div>
             ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: "40px" }}>
+            <a
+              href="https://www.google.com/search?q=SYS+Vehicles+Ltd+reviews"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                color: "#94a3b8",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: 500,
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "8px",
+                padding: "10px 20px",
+                transition: "border-color 0.2s, color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(220,38,38,0.4)";
+                (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.1)";
+                (e.currentTarget as HTMLAnchorElement).style.color = "#94a3b8";
+              }}
+            >
+              ⭐ View all reviews on Google
+            </a>
           </div>
         </div>
       </section>
