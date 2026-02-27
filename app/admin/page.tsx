@@ -65,12 +65,20 @@ export default function AdminPage() {
   // loaded ref prevents the save effect from running before the initial load
   const loaded = useRef(false);
 
-  // ── Form state ─────────────────────────────────────────────────────────────
+  // ── Add form state ─────────────────────────────────────────────────────────
   const [formData, setFormData] = useState({
     make: "", model: "", year: "", price: "",
     mileage: "", fuel: "", transmission: "", color: "", badge: "",
   });
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // ── Edit modal state ───────────────────────────────────────────────────────
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
+  const [editForm, setEditForm] = useState({
+    make: "", model: "", year: "", price: "",
+    mileage: "", fuel: "", transmission: "", color: "", badge: "",
+  });
+  const [editPhotos, setEditPhotos] = useState<string[]>([]);
 
   // ── Load from localStorage after login ────────────────────────────────────
   useEffect(() => {
@@ -123,6 +131,50 @@ export default function AdminPage() {
 
   const removePhoto = (index: number) =>
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+
+  // ── Edit handlers ──────────────────────────────────────────────────────────
+  const handleOpenEdit = (car: Car) => {
+    setEditingCar(car);
+    setEditForm({
+      make: car.make, model: car.model, year: String(car.year),
+      price: String(car.price), mileage: car.mileage, fuel: car.fuel,
+      transmission: car.transmission, color: car.color, badge: car.badge ?? "",
+    });
+    // Load existing photos — uploaded ones first, fallback to unsplash placeholder
+    setEditPhotos(car.photoUrls?.length ? car.photoUrls : car.photoUrl ? [car.photoUrl] : []);
+  };
+
+  const handleEditPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => setEditPhotos((prev) => [...prev, reader.result as string]);
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const removeEditPhoto = (index: number) =>
+    setEditPhotos((prev) => prev.filter((_, i) => i !== index));
+
+  const handleSaveEdit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!editingCar) return;
+    const price = Number(editForm.price);
+    const year = Number(editForm.year);
+    setCars((prev) => prev.map((c) =>
+      c.id === editingCar.id ? {
+        ...c,
+        make: editForm.make.trim(), model: editForm.model.trim(),
+        year, price, mileage: editForm.mileage.trim(),
+        fuel: editForm.fuel.trim(), transmission: editForm.transmission.trim(),
+        color: editForm.color.trim(), badge: editForm.badge.trim(),
+        ...(editPhotos.length > 0 ? { photoUrls: editPhotos, photoUrl: undefined } : { photoUrls: undefined }),
+        category: buildCategory(price, editForm.fuel.trim(), editForm.model.trim()),
+      } : c
+    ));
+    setEditingCar(null);
+  };
 
   // ── Add car ────────────────────────────────────────────────────────────────
   const handleAddCar = (e: FormEvent) => {
@@ -213,6 +265,10 @@ export default function AdminPage() {
                           {s}
                         </button>
                       ))}
+                      <button onClick={() => handleOpenEdit(car)}
+                        style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", fontSize: "12px" }}>
+                        ✏️ Edit
+                      </button>
                       <button onClick={() => deleteCar(car.id)}
                         style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", fontSize: "12px" }}>
                         🗑 Remove
@@ -333,6 +389,99 @@ export default function AdminPage() {
           </form>
         </div>
       </div>
+
+      {/* ── Edit Modal ── */}
+      {editingCar && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingCar(null); }}
+          style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
+        >
+          <div style={{ background: "#111118", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", width: "100%", maxWidth: "700px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h2 style={{ fontSize: "20px", fontWeight: 800 }}>Edit — {editingCar.year} {editingCar.make} {editingCar.model}</h2>
+              <button onClick={() => setEditingCar(null)} style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "#94a3b8", width: "32px", height: "32px", borderRadius: "50%", cursor: "pointer", fontSize: "16px" }}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEdit}>
+              {/* Fields grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+                {[
+                  { key: "make", label: "Make" },
+                  { key: "model", label: "Model" },
+                  { key: "year", label: "Year", type: "number" },
+                  { key: "price", label: "Price (£)", type: "number" },
+                  { key: "mileage", label: "Mileage" },
+                  { key: "fuel", label: "Fuel" },
+                  { key: "transmission", label: "Transmission" },
+                  { key: "color", label: "Colour" },
+                  { key: "badge", label: "Badge (optional)" },
+                ].map((field) => (
+                  <label key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#cbd5e1" }}>
+                    {field.label}
+                    <input
+                      required={field.key !== "badge"}
+                      type={field.type ?? "text"}
+                      value={editForm[field.key as keyof typeof editForm]}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      style={inputStyle}
+                    />
+                  </label>
+                ))}
+              </div>
+
+              {/* Photos section */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px", marginBottom: "20px" }}>
+                <p style={{ fontSize: "13px", color: "#cbd5e1", marginBottom: "10px", fontWeight: 600 }}>
+                  Photos <span style={{ color: "#475569", fontWeight: 400 }}>— first photo is the main listing image</span>
+                </p>
+
+                {/* Current photos grid */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "10px" }}>
+                  {editPhotos.map((src, i) => (
+                    <div key={i} style={{ position: "relative", width: "110px", height: "82px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      {i === 0 && (
+                        <div style={{ position: "absolute", top: "4px", left: "4px", background: "#dc2626", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "2px 5px", borderRadius: "4px" }}>MAIN</div>
+                      )}
+                      <button type="button" onClick={() => removeEditPhoto(i)}
+                        style={{ position: "absolute", top: "4px", right: "4px", width: "18px", height: "18px", borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "#fff", fontSize: "10px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                    </div>
+                  ))}
+
+                  {/* Add more */}
+                  <label htmlFor="edit-photo-upload"
+                    style={{ width: "110px", height: "82px", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b", fontSize: "12px", gap: "4px" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLLabelElement).style.borderColor = "#dc2626"; (e.currentTarget as HTMLLabelElement).style.color = "#fff"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLLabelElement).style.borderColor = "rgba(255,255,255,0.2)"; (e.currentTarget as HTMLLabelElement).style.color = "#64748b"; }}
+                  >
+                    <span style={{ fontSize: "18px" }}>+</span>
+                    <span>Add photo</span>
+                  </label>
+                  <input id="edit-photo-upload" type="file" accept="image/*" multiple onChange={handleEditPhotoUpload} style={{ display: "none" }} />
+                </div>
+
+                {editPhotos.length === 0 && (
+                  <p style={{ fontSize: "11px", color: "#475569" }}>No photos uploaded — stock image will be shown.</p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button type="submit"
+                  style={{ background: "#dc2626", border: "none", color: "#fff", borderRadius: "8px", padding: "10px 24px", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>
+                  Save Changes
+                </button>
+                <button type="button" onClick={() => setEditingCar(null)}
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#94a3b8", borderRadius: "8px", padding: "10px 20px", fontWeight: 600, fontSize: "14px", cursor: "pointer" }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
