@@ -7,14 +7,9 @@ import {
   Phone,
   Mail,
   MapPin,
-  Clock,
   Menu,
   X,
   ChevronRight,
-  Facebook,
-  Instagram,
-  Twitter,
-  ExternalLink,
   Fuel,
   Gauge,
   Settings,
@@ -1604,14 +1599,6 @@ export default function SYSVehiclesPage() {
                     icon: <Mail size={16} color="#dc2626" />,
                     lines: ["Daniel@sysltd.net"],
                   },
-                  {
-                    icon: <Clock size={16} color="#dc2626" />,
-                    lines: [
-                      "Mon–Fri: 9am – 6pm",
-                      "Sat: 9am – 5pm",
-                      "Sun: 10am – 4pm",
-                    ],
-                  },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -1637,59 +1624,7 @@ export default function SYSVehiclesPage() {
                   </div>
                 ))}
 
-                {/* Social icons */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    marginTop: "20px",
-                    paddingTop: "20px",
-                    borderTop: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  {[
-                    { icon: <Facebook size={18} />, label: "Facebook" },
-                    { icon: <Instagram size={18} />, label: "Instagram" },
-                    { icon: <Twitter size={18} />, label: "Twitter" },
-                    { icon: <ExternalLink size={18} />, label: "Google Reviews" },
-                  ].map((s) => (
-                    <button
-                      key={s.label}
-                      title={s.label}
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "10px",
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#94a3b8",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(201,165,81,0.15)";
-                        (e.currentTarget as HTMLButtonElement).style.color =
-                          "#dc2626";
-                        (e.currentTarget as HTMLButtonElement).style.borderColor =
-                          "rgba(201,165,81,0.3)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(255,255,255,0.06)";
-                        (e.currentTarget as HTMLButtonElement).style.color =
-                          "#94a3b8";
-                        (e.currentTarget as HTMLButtonElement).style.borderColor =
-                          "rgba(255,255,255,0.08)";
-                      }}
-                    >
-                      {s.icon}
-                    </button>
-                  ))}
-                </div>
+                
               </div>
 
               {/* Map placeholder */}
