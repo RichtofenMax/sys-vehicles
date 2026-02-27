@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --gold: #c9a551;
+  --gold: #dc2626;
   --gold-dim: rgba(201, 165, 81, 0.12);
   --gold-border: rgba(201, 165, 81, 0.25);
 }
@@ -24,6 +24,6 @@ html { scroll-behavior: smooth; }
   display: block;
   width: 32px;
   height: 1px;
-  background: #c9a551;
+  background: #dc2626;
   margin-bottom: 12px;
 }
