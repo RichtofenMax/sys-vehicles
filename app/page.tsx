@@ -36,6 +36,7 @@ type Car = {
   color: string;
   badge: string;
   photoId: string;
+  photoUrl?: string; // uploaded image — takes priority over photoId
   category: string[];
   status: "available" | "sold" | "reserved";
 };
@@ -91,7 +92,7 @@ function CarCard({ car }: { car: Car }) {
       <div style={{ position: "relative", height: "200px" }}>
         {!imgError ? (
           <img
-            src={`https://images.unsplash.com/photo-${car.photoId}?w=500&q=65&auto=format`}
+            src={car.photoUrl || `https://images.unsplash.com/photo-${car.photoId}?w=500&q=65&auto=format`}
             alt={`${car.make} ${car.model}`}
             loading="lazy"
             decoding="async"

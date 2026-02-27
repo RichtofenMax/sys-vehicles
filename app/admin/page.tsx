@@ -15,6 +15,7 @@ type Car = {
   color: string;
   badge: string;
   photoId: string;
+  photoUrl?: string; // base64 or URL — takes priority over photoId
   category: string[];
   status: "available" | "reserved" | "sold";
 };
@@ -59,6 +60,15 @@ export default function AdminPage() {
     color: "",
     badge: "",
   });
+  const [photoPreview, setPhotoPreview] = useState<string>("");
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPhotoPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (!authenticated) return;
@@ -124,6 +134,7 @@ export default function AdminPage() {
       color: formData.color.trim(),
       badge: formData.badge.trim(),
       photoId,
+      ...(photoPreview ? { photoUrl: photoPreview } : {}),
       category: buildCategory(price, formData.fuel.trim(), formData.model.trim()),
       status: "available",
     };
@@ -140,6 +151,7 @@ export default function AdminPage() {
       color: "",
       badge: "",
     });
+    setPhotoPreview("");
   };
 
   if (!authenticated) {
@@ -233,6 +245,101 @@ export default function AdminPage() {
                 />
               </label>
             ))}
+            {/* Photo Upload */}
+            <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <label style={{ fontSize: "13px", color: "#cbd5e1", display: "flex", flexDirection: "column", gap: "6px" }}>
+                Car Photo
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <label
+                    htmlFor="photo-upload"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px dashed rgba(255,255,255,0.3)",
+                      borderRadius: "8px",
+                      padding: "10px 16px",
+                      cursor: "pointer",
+                      color: "#94a3b8",
+                      fontSize: "13px",
+                      transition: "border-color 0.2s, color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLLabelElement).style.borderColor = "#dc2626";
+                      (e.currentTarget as HTMLLabelElement).style.color = "#fff";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLLabelElement).style.borderColor = "rgba(255,255,255,0.3)";
+                      (e.currentTarget as HTMLLabelElement).style.color = "#94a3b8";
+                    }}
+                  >
+                    📷 {photoPreview ? "Change Photo" : "Upload Photo"}
+                  </label>
+                  <input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    style={{ display: "none" }}
+                  />
+                  {photoPreview && (
+                    <button
+                      type="button"
+                      onClick={() => setPhotoPreview("")}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "#94a3b8",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      ✕ Remove
+                    </button>
+                  )}
+                </div>
+              </label>
+
+              {/* Preview */}
+              {photoPreview && (
+                <div style={{ position: "relative", width: "180px", height: "120px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                  <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+                    padding: "6px 8px",
+                    fontSize: "10px",
+                    color: "#22c55e",
+                    fontWeight: 600,
+                  }}>
+                    ✓ Photo ready
+                  </div>
+                </div>
+              )}
+
+              {!photoPreview && (
+                <p style={{ fontSize: "11px", color: "#475569" }}>
+                  Optional — if no photo is uploaded, a stock image will be used.
+                </p>
+              )}
+            </div>
+
             <div style={{ gridColumn: "1 / -1" }}>
               <button type="submit" style={{ background: "#dc2626", border: "none", color: "#fff", borderRadius: "8px", padding: "10px 14px", fontWeight: 700, cursor: "pointer" }}>
                 Add Car
