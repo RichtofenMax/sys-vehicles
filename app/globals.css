@@ -27,3 +27,69 @@ html { scroll-behavior: smooth; }
   background: #dc2626;
   margin-bottom: 12px;
 }
+
+/* ── Mobile Responsive ──────────────────────────────────────────────────── */
+
+/* Car grid: 1 column on small phones */
+@media (max-width: 480px) {
+  .car-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Hero CTA buttons — stack on mobile */
+@media (max-width: 600px) {
+  .hero-ctas { flex-direction: column !important; align-items: stretch !important; }
+  .hero-ctas a, .hero-ctas button { text-align: center; width: 100%; }
+}
+
+/* Stats strip — wrap to 2 cols on mobile */
+@media (max-width: 600px) {
+  .stats-strip { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+}
+
+/* Why Choose Us cards — 1 col on mobile */
+@media (max-width: 600px) {
+  .why-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Modals — near full-screen on mobile */
+@media (max-width: 640px) {
+  .modal-container {
+    padding: 8px !important;
+    align-items: flex-end !important;
+  }
+  .modal-box {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 95vh !important;
+  }
+  .modal-image { height: 220px !important; }
+}
+
+/* Admin edit modal grid — 1 col on mobile */
+@media (max-width: 600px) {
+  .edit-form-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Contact section — stack on mobile */
+@media (max-width: 768px) {
+  .contact-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Admin table rows — smaller padding on mobile */
+@media (max-width: 640px) {
+  .admin-table th, .admin-table td { padding: 8px 6px !important; font-size: 12px !important; }
+  .status-btns { flex-direction: column !important; gap: 4px !important; }
+  .status-btns button { width: 100%; text-align: center; }
+}
+
+/* Footer — stack on mobile */
+@media (max-width: 480px) {
+  .footer-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+}
+
+/* Admin tabs */
+@media (max-width: 480px) {
+  .admin-tabs button { padding: 8px 10px !important; font-size: 13px !important; }
+}
+

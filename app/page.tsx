@@ -57,6 +57,7 @@ function calcMonthly(price: number, deposit: number, months: number) {
 }
 
 const STORAGE_KEY = "sys-cars";
+const ENQUIRIES_KEY = "sys-enquiries";
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -307,6 +308,7 @@ function CarModal({ car, onClose, onEnquire }: { car: Car; onClose: () => void; 
   return (
     <div
       onClick={handleBackdrop}
+      className="modal-container"
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
         background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)",
@@ -315,6 +317,7 @@ function CarModal({ car, onClose, onEnquire }: { car: Car; onClose: () => void; 
       }}
     >
       <div
+        className="modal-box"
         style={{
           background: "#111118", border: "1px solid rgba(255,255,255,0.1)",
           borderRadius: "20px", width: "100%", maxWidth: "780px",
@@ -322,7 +325,7 @@ function CarModal({ car, onClose, onEnquire }: { car: Car; onClose: () => void; 
         }}
       >
         {/* Image gallery */}
-        <div style={{ position: "relative", height: "320px", borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#0a0a0f" }}>
+        <div className="modal-image" style={{ position: "relative", height: "320px", borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#0a0a0f" }}>
           {!imgError ? (
             <img
               src={photos[photoIndex]}
@@ -476,7 +479,16 @@ export default function SYSVehiclesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const enquiry = {
+      id: Date.now(),
+      ...formData,
+      submittedAt: new Date().toISOString(),
+      read: false,
+    };
+    const existing = JSON.parse(localStorage.getItem(ENQUIRIES_KEY) || "[]");
+    localStorage.setItem(ENQUIRIES_KEY, JSON.stringify([enquiry, ...existing]));
     setFormSubmitted(true);
+    setFormData({ name: "", email: "", phone: "", car: "", message: "" });
   };
 
   const handleEnquire = (carName: string) => {
@@ -1364,6 +1376,7 @@ export default function SYSVehiclesPage() {
           </div>
 
           <div
+            className="contact-grid"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",

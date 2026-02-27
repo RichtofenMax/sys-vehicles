@@ -22,7 +22,19 @@ type Car = {
 };
 
 const STORAGE_KEY = "sys-cars";
+const ENQUIRIES_KEY = "sys-enquiries";
 const ADMIN_PASSWORD = "sysadmin2026";
+
+type Enquiry = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  car: string;
+  message: string;
+  submittedAt: string;
+  read: boolean;
+};
 
 const STARTER_PHOTO_IDS = [
   "1555215695-3d98bc139570",
@@ -71,6 +83,31 @@ export default function AdminPage() {
     mileage: "", fuel: "", transmission: "", color: "", badge: "",
   });
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // ── View toggle + enquiries ────────────────────────────────────────────────
+  const [view, setView] = useState<"cars" | "enquiries">("cars");
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+
+  useEffect(() => {
+    if (!authenticated) return;
+    const raw = localStorage.getItem(ENQUIRIES_KEY);
+    if (raw) { try { setEnquiries(JSON.parse(raw)); } catch { /* empty */ } }
+  }, [authenticated]);
+
+  const markRead = (id: number) => {
+    const updated = enquiries.map((e) => e.id === id ? { ...e, read: true } : e);
+    setEnquiries(updated);
+    localStorage.setItem(ENQUIRIES_KEY, JSON.stringify(updated));
+  };
+
+  const deleteEnquiry = (id: number) => {
+    if (!confirm("Delete this enquiry?")) return;
+    const updated = enquiries.filter((e) => e.id !== id);
+    setEnquiries(updated);
+    localStorage.setItem(ENQUIRIES_KEY, JSON.stringify(updated));
+  };
+
+  const unreadCount = enquiries.filter((e) => !e.read).length;
 
   // ── Edit modal state ───────────────────────────────────────────────────────
   const [editingCar, setEditingCar] = useState<Car | null>(null);
@@ -227,11 +264,110 @@ export default function AdminPage() {
   return (
     <main style={{ minHeight: "100vh", background: "#09090f", color: "#fff", padding: "32px 20px 60px" }}>
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "30px", fontWeight: 900, marginBottom: "20px" }}>Vehicle Status Admin</h1>
+        <h1 style={{ fontSize: "30px", fontWeight: 900, marginBottom: "20px" }}>SYS Vehicles Admin</h1>
+
+        {/* ── Tabs ── */}
+        <div style={{ display: "flex", gap: "8px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0" }}>
+          {[
+            { key: "cars", label: "🚗 Listings", count: cars.length },
+            { key: "enquiries", label: "📩 Enquiries", count: unreadCount || undefined },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key as "cars" | "enquiries")}
+              style={{
+                background: "transparent", border: "none", cursor: "pointer",
+                color: view === tab.key ? "#fff" : "#64748b",
+                fontSize: "14px", fontWeight: 700, padding: "10px 16px",
+                borderBottom: view === tab.key ? "2px solid #dc2626" : "2px solid transparent",
+                marginBottom: "-1px", display: "flex", alignItems: "center", gap: "6px",
+                transition: "color 0.2s",
+              }}
+            >
+              {tab.label}
+              {tab.count !== undefined && (
+                <span style={{ background: view === tab.key ? "#dc2626" : "#374151", color: "#fff", fontSize: "11px", fontWeight: 800, padding: "2px 7px", borderRadius: "999px", minWidth: "20px", textAlign: "center" }}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* ── Car Table ── */}
+        {view === "enquiries" && (
+          <div>
+            {enquiries.length === 0 ? (
+              <div style={{ textAlign: "center", color: "#475569", padding: "60px 0" }}>
+                <div style={{ fontSize: "40px", marginBottom: "12px" }}>📭</div>
+                <p style={{ fontSize: "16px" }}>No enquiries yet.</p>
+                <p style={{ fontSize: "13px", marginTop: "4px" }}>When someone fills in the enquiry form, it'll show up here.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {enquiries.map((enq) => (
+                  <div
+                    key={enq.id}
+                    style={{
+                      background: enq.read ? "#111118" : "rgba(220,38,38,0.06)",
+                      border: `1px solid ${enq.read ? "rgba(255,255,255,0.08)" : "rgba(220,38,38,0.25)"}`,
+                      borderRadius: "12px", padding: "18px 20px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px", marginBottom: "10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                        <span style={{ fontWeight: 700, fontSize: "16px", color: "#fff" }}>{enq.name}</span>
+                        {!enq.read && (
+                          <span style={{ background: "#dc2626", color: "#fff", fontSize: "10px", fontWeight: 800, padding: "2px 8px", borderRadius: "999px", letterSpacing: "0.05em" }}>NEW</span>
+                        )}
+                        {enq.car && (
+                          <span style={{ background: "rgba(255,255,255,0.06)", color: "#94a3b8", fontSize: "12px", padding: "2px 10px", borderRadius: "999px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                            🚗 {enq.car}
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ color: "#475569", fontSize: "12px" }}>
+                        {new Date(enq.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "12px" }}>
+                      {enq.email && (
+                        <a href={`mailto:${enq.email}`} style={{ color: "#dc2626", fontSize: "13px", textDecoration: "none" }}>✉ {enq.email}</a>
+                      )}
+                      {enq.phone && (
+                        <a href={`tel:${enq.phone}`} style={{ color: "#dc2626", fontSize: "13px", textDecoration: "none" }}>📞 {enq.phone}</a>
+                      )}
+                    </div>
+
+                    {enq.message && (
+                      <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: 1.6, background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "10px 12px", marginBottom: "12px" }}>
+                        "{enq.message}"
+                      </p>
+                    )}
+
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {!enq.read && (
+                        <button onClick={() => markRead(enq.id)}
+                          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#94a3b8", borderRadius: "6px", padding: "6px 12px", cursor: "pointer", fontSize: "12px" }}>
+                          ✓ Mark as Read
+                        </button>
+                      )}
+                      <button onClick={() => deleteEnquiry(enq.id)}
+                        style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#ef4444", borderRadius: "6px", padding: "6px 12px", cursor: "pointer", fontSize: "12px" }}>
+                        🗑 Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === "cars" && (<>
         <div style={{ overflowX: "auto", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", marginBottom: "30px" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
+          <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
             <thead>
               <tr style={{ background: "rgba(255,255,255,0.04)" }}>
                 {["Car", "Year", "Price", "Status", "Actions"].map((h) => (
@@ -258,7 +394,7 @@ export default function AdminPage() {
                   <td style={{ padding: "12px" }}>£{car.price.toLocaleString("en-GB")}</td>
                   <td style={{ padding: "12px", textTransform: "capitalize" }}>{car.status}</td>
                   <td style={{ padding: "12px" }}>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    <div className="status-btns" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                       {(["available", "reserved", "sold"] as Car["status"][]).map((s) => (
                         <button key={s} onClick={() => updateStatus(car.id, s)}
                           style={{ background: car.status === s ? (s === "available" ? "#22c55e" : s === "reserved" ? "#f59e0b" : "#dc2626") : "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", textTransform: "capitalize", fontSize: "12px" }}>
@@ -388,15 +524,17 @@ export default function AdminPage() {
             </button>
           </form>
         </div>
+      </>)}
       </div>
 
       {/* ── Edit Modal ── */}
       {editingCar && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) setEditingCar(null); }}
+          className="modal-container"
           style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
         >
-          <div style={{ background: "#111118", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", width: "100%", maxWidth: "700px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+          <div className="modal-box" style={{ background: "#111118", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", width: "100%", maxWidth: "700px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "20px", fontWeight: 800 }}>Edit — {editingCar.year} {editingCar.make} {editingCar.model}</h2>
@@ -405,7 +543,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleSaveEdit}>
               {/* Fields grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+              <div className="edit-form-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
                 {[
                   { key: "make", label: "Make" },
                   { key: "model", label: "Model" },
