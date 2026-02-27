@@ -1781,10 +1781,13 @@ export default function SYSVehiclesPage() {
             © 2026 SYS Vehicles. All rights reserved.
           </span>
           <div style={{ display: "flex", gap: "20px" }}>
-            {["Privacy Policy", "Cookie Policy"].map((link) => (
+            {[
+              { label: "Privacy Policy", href: "/privacy" },
+              { label: "Cookie Policy", href: "/cookies" },
+            ].map((link) => (
               <a
-                key={link}
-                href="#"
+                key={link.label}
+                href={link.href}
                 style={{
                   color: "#475569",
                   fontSize: "12px",
@@ -1798,7 +1801,7 @@ export default function SYSVehiclesPage() {
                   ((e.currentTarget as HTMLAnchorElement).style.color = "#475569")
                 }
               >
-                {link}
+                {link.label}
               </a>
             ))}
           </div>
