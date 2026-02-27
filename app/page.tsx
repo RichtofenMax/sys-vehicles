@@ -1434,7 +1434,7 @@ export default function SYSVehiclesPage() {
                   },
                   {
                     icon: <Mail size={16} color="#dc2626" />,
-                    lines: ["info@sysvehicles.co.uk"],
+                    lines: ["Daniel@sysltd.net"],
                   },
                   {
                     icon: <Clock size={16} color="#dc2626" />,
