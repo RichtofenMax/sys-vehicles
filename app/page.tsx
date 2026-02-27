@@ -81,7 +81,7 @@ function CarCard({ car }: { car: Car }) {
       className="group hover:-translate-y-1"
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow =
-          "0 8px 32px rgba(220,38,38,0.12)";
+          "0 8px 32px rgba(201,165,81,0.12)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
@@ -123,7 +123,7 @@ function CarCard({ car }: { car: Car }) {
               background:
                 car.badge === "Electric"
                   ? "#3b82f6"
-                  : "rgba(220,38,38,0.9)",
+                  : "rgba(201,165,81,0.9)",
               color: "#fff",
               fontSize: "11px",
               fontWeight: 700,
@@ -140,7 +140,7 @@ function CarCard({ car }: { car: Car }) {
             style={{
               position: "absolute",
               inset: 0,
-              background: "rgba(0,0,0,0.65)",
+              background: "rgba(0,0,0,0.7)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -148,7 +148,7 @@ function CarCard({ car }: { car: Car }) {
           >
             <span
               style={{
-                background: car.status === "sold" ? "#dc2626" : "#f59e0b",
+                background: car.status === "sold" ? "#c9a551" : "#f59e0b",
                 color: "#fff",
                 fontWeight: 900,
                 fontSize: "20px",
@@ -207,7 +207,7 @@ function CarCard({ car }: { car: Car }) {
         {/* Price */}
         <div style={{ marginBottom: "14px" }}>
           <span
-            style={{ fontSize: "22px", fontWeight: 800, color: "#3b82f6" }}
+            style={{ fontSize: "22px", fontWeight: 800, color: "#c9a551" }}
           >
             {formatPrice(car.price)}
           </span>
@@ -219,7 +219,7 @@ function CarCard({ car }: { car: Car }) {
         <button
           style={{
             width: "100%",
-            background: "#dc2626",
+            background: "#c9a551",
             color: "#09090f",
             border: "none",
             borderRadius: "10px",
@@ -232,10 +232,10 @@ function CarCard({ car }: { car: Car }) {
             pointerEvents: isUnavailable ? "none" : "auto",
           }}
           onMouseEnter={(e) =>
-            ((e.currentTarget as HTMLButtonElement).style.background = "#b91c1c")
+            ((e.currentTarget as HTMLButtonElement).style.background = "#a8893a")
           }
           onMouseLeave={(e) =>
-            ((e.currentTarget as HTMLButtonElement).style.background = "#dc2626")
+            ((e.currentTarget as HTMLButtonElement).style.background = "#c9a551")
           }
         >
           {buttonLabel}
@@ -381,13 +381,13 @@ export default function SYSVehiclesPage() {
                 gap: "6px",
               }}
             >
-              <Phone size={14} style={{ color: "#dc2626" }} />
+              <Phone size={14} style={{ color: "#c9a551" }} />
               07427 691258
             </a>
             <a
               href="#contact"
               style={{
-                background: "#dc2626",
+                background: "#c9a551",
                 color: "#09090f",
                 padding: "8px 20px",
                 borderRadius: "8px",
@@ -398,11 +398,11 @@ export default function SYSVehiclesPage() {
               }}
               onMouseEnter={(e) =>
                 ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#b91c1c")
+                  "#a8893a")
               }
               onMouseLeave={(e) =>
                 ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "#dc2626")
+                  "#c9a551")
               }
             >
               Enquire Now
@@ -464,7 +464,7 @@ export default function SYSVehiclesPage() {
               <a
                 href="tel:07427691258"
                 style={{
-                  color: "#dc2626",
+                  color: "#c9a551",
                   textDecoration: "none",
                   fontWeight: 600,
                   display: "flex",
@@ -478,7 +478,7 @@ export default function SYSVehiclesPage() {
                 href="#contact"
                 onClick={() => setMenuOpen(false)}
                 style={{
-                  background: "#dc2626",
+                  background: "#c9a551",
                   color: "#09090f",
                   padding: "12px 20px",
                   borderRadius: "8px",
@@ -517,7 +517,7 @@ export default function SYSVehiclesPage() {
             width: "600px",
             height: "600px",
             background:
-              "radial-gradient(circle, rgba(220,38,38,0.10) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(201,165,81,0.08) 0%, transparent 70%)",
             pointerEvents: "none",
           }}
         />
@@ -543,14 +543,15 @@ export default function SYSVehiclesPage() {
             zIndex: 1,
           }}
         >
+          <span style={{ display: "block", width: "32px", height: "1px", background: "#c9a551", marginBottom: "16px" }} />
           {/* Eyebrow */}
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              background: "rgba(220,38,38,0.1)",
-              border: "1px solid rgba(220,38,38,0.2)",
+              background: "rgba(201,165,81,0.1)",
+              border: "1px solid rgba(201,165,81,0.2)",
               borderRadius: "999px",
               padding: "6px 16px",
               marginBottom: "32px",
@@ -561,13 +562,13 @@ export default function SYSVehiclesPage() {
                 width: "6px",
                 height: "6px",
                 borderRadius: "50%",
-                background: "#dc2626",
+                background: "#c9a551",
                 display: "inline-block",
               }}
             />
             <span
               style={{
-                color: "#dc2626",
+                color: "#c9a551",
                 fontSize: "13px",
                 fontWeight: 600,
                 letterSpacing: "0.06em",
@@ -587,19 +588,40 @@ export default function SYSVehiclesPage() {
               marginBottom: "28px",
             }}
           >
-            <span style={{ display: "block", color: "#ffffff" }}>YOUR NEXT</span>
             <span
               style={{
                 display: "block",
-                background: "linear-gradient(90deg, #dc2626, #b91c1c)",
+                color: "#ffffff",
+                fontFamily: "\"Playfair Display\", serif",
+                fontWeight: 700,
+              }}
+            >
+              Your Next
+            </span>
+            <span
+              style={{
+                display: "block",
+                background: "linear-gradient(90deg, #c9a551, #a8893a)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
+                fontFamily: "\"Playfair Display\", serif",
+                fontStyle: "italic",
+                fontWeight: 700,
               }}
             >
-              GREAT DRIVE
+              Great Drive
             </span>
-            <span style={{ display: "block", color: "#ffffff" }}>
+            <span
+              style={{
+                display: "block",
+                color: "#ffffff",
+                fontFamily: "\"DM Sans\", sans-serif",
+                fontWeight: 300,
+                letterSpacing: "0.12em",
+                fontSize: "clamp(18px, 2.5vw, 32px)",
+              }}
+            >
               STARTS HERE
             </span>
           </h1>
@@ -630,7 +652,7 @@ export default function SYSVehiclesPage() {
             <a
               href="#cars"
               style={{
-                background: "#dc2626",
+                background: "#c9a551",
                 color: "#09090f",
                 padding: "14px 32px",
                 borderRadius: "10px",
@@ -644,13 +666,13 @@ export default function SYSVehiclesPage() {
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.background =
-                  "#b91c1c";
+                  "#a8893a";
                 (e.currentTarget as HTMLAnchorElement).style.transform =
                   "translateY(-1px)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.background =
-                  "#dc2626";
+                  "#c9a551";
                 (e.currentTarget as HTMLAnchorElement).style.transform =
                   "translateY(0)";
               }}
@@ -687,7 +709,7 @@ export default function SYSVehiclesPage() {
                   style={{
                     fontSize: "22px",
                     fontWeight: 800,
-                    color: "#dc2626",
+                    color: "#c9a551",
                   }}
                 >
                   {stat.val}
@@ -708,9 +730,10 @@ export default function SYSVehiclesPage() {
       >
         {/* Heading */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <span style={{ display: "block", width: "28px", height: "1px", background: "#c9a551", margin: "0 auto 10px" }} />
           <div
             style={{
-              color: "#dc2626",
+              color: "#c9a551",
               fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "0.12em",
@@ -723,7 +746,8 @@ export default function SYSVehiclesPage() {
           <h2
             style={{
               fontSize: "clamp(28px, 4vw, 44px)",
-              fontWeight: 900,
+              fontFamily: "\"Playfair Display\", serif",
+              fontWeight: 700,
               color: "#fff",
               letterSpacing: "-0.02em",
             }}
@@ -764,13 +788,13 @@ export default function SYSVehiclesPage() {
                 border: "1px solid",
                 borderColor:
                   activeFilter === f.key
-                    ? "#dc2626"
+                    ? "#c9a551"
                     : "rgba(255,255,255,0.1)",
                 background:
                   activeFilter === f.key
-                    ? "rgba(220,38,38,0.15)"
+                    ? "rgba(201,165,81,0.15)"
                     : "transparent",
-                color: activeFilter === f.key ? "#dc2626" : "#94a3b8",
+                color: activeFilter === f.key ? "#c9a551" : "#94a3b8",
                 fontWeight: 600,
                 fontSize: "13px",
                 cursor: "pointer",
@@ -793,7 +817,7 @@ export default function SYSVehiclesPage() {
             }}
           >
             No vehicles in this category currently. Check back soon or{" "}
-            <a href="#contact" style={{ color: "#dc2626" }}>
+            <a href="#contact" style={{ color: "#c9a551" }}>
               enquire directly
             </a>
             .
@@ -824,9 +848,10 @@ export default function SYSVehiclesPage() {
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           {/* Heading */}
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <span style={{ display: "block", width: "28px", height: "1px", background: "#c9a551", margin: "0 auto 10px" }} />
             <div
               style={{
-                color: "#dc2626",
+                color: "#c9a551",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -839,7 +864,8 @@ export default function SYSVehiclesPage() {
             <h2
               style={{
                 fontSize: "clamp(28px, 4vw, 44px)",
-                fontWeight: 900,
+                fontFamily: "\"Playfair Display\", serif",
+                fontWeight: 700,
                 color: "#fff",
                 letterSpacing: "-0.02em",
               }}
@@ -869,12 +895,12 @@ export default function SYSVehiclesPage() {
           >
             {[
               {
-                icon: <Shield size={24} color="#dc2626" />,
+                icon: <Shield size={24} color="#c9a551" />,
                 title: "Exactly As Described",
                 desc: "Every car is thoroughly inspected and listed honestly. Clean, well-maintained vehicles — no hidden surprises, no exaggeration.",
               },
               {
-                icon: <Star size={24} color="#dc2626" />,
+                icon: <Star size={24} color="#c9a551" />,
                 title: "Friendly, Knowledgeable Team",
                 desc: "Clear communication from first enquiry to keys in hand. Our team knows their cars and is always happy to help without the pushy sales pitch.",
               },
@@ -891,7 +917,7 @@ export default function SYSVehiclesPage() {
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(220,38,38,0.3)";
+                    "rgba(201,165,81,0.3)";
                   (e.currentTarget as HTMLDivElement).style.transform =
                     "translateY(-2px)";
                 }}
@@ -906,7 +932,7 @@ export default function SYSVehiclesPage() {
                   style={{
                     width: "48px",
                     height: "48px",
-                    background: "rgba(220,38,38,0.12)",
+                    background: "rgba(201,165,81,0.12)",
                     borderRadius: "12px",
                     display: "flex",
                     alignItems: "center",
@@ -945,9 +971,10 @@ export default function SYSVehiclesPage() {
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <span style={{ display: "block", width: "28px", height: "1px", background: "#c9a551", margin: "0 auto 10px" }} />
             <div
               style={{
-                color: "#dc2626",
+                color: "#c9a551",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -960,7 +987,8 @@ export default function SYSVehiclesPage() {
             <h2
               style={{
                 fontSize: "clamp(28px, 4vw, 44px)",
-                fontWeight: 900,
+                fontFamily: "\"Playfair Display\", serif",
+                fontWeight: 700,
                 color: "#fff",
                 letterSpacing: "-0.02em",
               }}
@@ -1011,9 +1039,10 @@ export default function SYSVehiclesPage() {
                   style={{
                     fontSize: "72px",
                     lineHeight: 0.8,
-                    color: "#dc2626",
+                    color: "#c9a551",
                     opacity: 0.3,
                     fontWeight: 900,
+                    fontFamily: "\"Playfair Display\", serif",
                     marginBottom: "12px",
                   }}
                 >
@@ -1041,8 +1070,8 @@ export default function SYSVehiclesPage() {
                     <Star
                       key={s}
                       size={14}
-                      fill="#dc2626"
-                      color="#dc2626"
+                      fill="#c9a551"
+                      color="#c9a551"
                     />
                   ))}
                 </div>
@@ -1086,7 +1115,7 @@ export default function SYSVehiclesPage() {
                 transition: "border-color 0.2s, color 0.2s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(220,38,38,0.4)";
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(201,165,81,0.4)";
                 (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
               }}
               onMouseLeave={(e) => {
@@ -1107,9 +1136,10 @@ export default function SYSVehiclesPage() {
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <span style={{ display: "block", width: "28px", height: "1px", background: "#c9a551", margin: "0 auto 10px" }} />
             <div
               style={{
-                color: "#dc2626",
+                color: "#c9a551",
                 fontSize: "12px",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
@@ -1122,7 +1152,8 @@ export default function SYSVehiclesPage() {
             <h2
               style={{
                 fontSize: "clamp(28px, 4vw, 44px)",
-                fontWeight: 900,
+                fontFamily: "\"Playfair Display\", serif",
+                fontWeight: 700,
                 color: "#fff",
                 letterSpacing: "-0.02em",
               }}
@@ -1185,8 +1216,8 @@ export default function SYSVehiclesPage() {
                     style={{
                       marginTop: "24px",
                       background: "transparent",
-                      color: "#dc2626",
-                      border: "1px solid #dc2626",
+                      color: "#c9a551",
+                      border: "1px solid #c9a551",
                       padding: "10px 24px",
                       borderRadius: "8px",
                       cursor: "pointer",
@@ -1255,7 +1286,7 @@ export default function SYSVehiclesPage() {
                         }}
                         onFocus={(e) =>
                           ((e.currentTarget as HTMLInputElement).style.borderColor =
-                            "rgba(220,38,38,0.5)")
+                            "rgba(201,165,81,0.5)")
                         }
                         onBlur={(e) =>
                           ((e.currentTarget as HTMLInputElement).style.borderColor =
@@ -1298,7 +1329,7 @@ export default function SYSVehiclesPage() {
                       }}
                       onFocus={(e) =>
                         ((e.currentTarget as HTMLTextAreaElement).style.borderColor =
-                          "rgba(220,38,38,0.5)")
+                          "rgba(201,165,81,0.5)")
                       }
                       onBlur={(e) =>
                         ((e.currentTarget as HTMLTextAreaElement).style.borderColor =
@@ -1311,7 +1342,7 @@ export default function SYSVehiclesPage() {
                     type="submit"
                     style={{
                       width: "100%",
-                      background: "#dc2626",
+                      background: "#c9a551",
                       color: "#09090f",
                       border: "none",
                       borderRadius: "10px",
@@ -1323,11 +1354,11 @@ export default function SYSVehiclesPage() {
                     }}
                     onMouseEnter={(e) =>
                       ((e.currentTarget as HTMLButtonElement).style.background =
-                        "#b91c1c")
+                        "#a8893a")
                     }
                     onMouseLeave={(e) =>
                       ((e.currentTarget as HTMLButtonElement).style.background =
-                        "#dc2626")
+                        "#c9a551")
                     }
                   >
                     Send Enquiry
@@ -1359,19 +1390,19 @@ export default function SYSVehiclesPage() {
                 </h3>
                 {[
                   {
-                    icon: <MapPin size={16} color="#dc2626" />,
+                    icon: <MapPin size={16} color="#c9a551" />,
                     lines: ["Babur Rd, Sheffield", "S4 7PY, United Kingdom"],
                   },
                   {
-                    icon: <Phone size={16} color="#dc2626" />,
+                    icon: <Phone size={16} color="#c9a551" />,
                     lines: ["07427 691258"],
                   },
                   {
-                    icon: <Mail size={16} color="#dc2626" />,
+                    icon: <Mail size={16} color="#c9a551" />,
                     lines: ["info@sysvehicles.co.uk"],
                   },
                   {
-                    icon: <Clock size={16} color="#dc2626" />,
+                    icon: <Clock size={16} color="#c9a551" />,
                     lines: [
                       "Mon–Fri: 9am – 6pm",
                       "Sat: 9am – 5pm",
@@ -1437,11 +1468,11 @@ export default function SYSVehiclesPage() {
                       }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(220,38,38,0.15)";
+                          "rgba(201,165,81,0.15)";
                         (e.currentTarget as HTMLButtonElement).style.color =
-                          "#dc2626";
+                          "#c9a551";
                         (e.currentTarget as HTMLButtonElement).style.borderColor =
-                          "rgba(220,38,38,0.3)";
+                          "rgba(201,165,81,0.3)";
                       }}
                       onMouseLeave={(e) => {
                         (e.currentTarget as HTMLButtonElement).style.background =
@@ -1474,7 +1505,7 @@ export default function SYSVehiclesPage() {
                     "linear-gradient(135deg, #111118, #1a1a26)",
                 }}
               >
-                <MapPin size={36} color="#dc2626" />
+                <MapPin size={36} color="#c9a551" />
                 <div style={{ textAlign: "center" }}>
                   <div
                     style={{
@@ -1557,7 +1588,7 @@ export default function SYSVehiclesPage() {
                   }}
                   onMouseEnter={(e) =>
                     ((e.currentTarget as HTMLAnchorElement).style.color =
-                      "#dc2626")
+                      "#c9a551")
                   }
                   onMouseLeave={(e) =>
                     ((e.currentTarget as HTMLAnchorElement).style.color =

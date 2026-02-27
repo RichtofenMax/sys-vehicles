@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+:root {
+  --gold: #c9a551;
+  --gold-dim: rgba(201, 165, 81, 0.12);
+  --gold-border: rgba(201, 165, 81, 0.25);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -13,3 +19,11 @@ html { scroll-behavior: smooth; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #09090f; }
 ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+
+.luxury-rule {
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: #c9a551;
+  margin-bottom: 12px;
+}
