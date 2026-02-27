@@ -65,10 +65,9 @@ const STORAGE_KEY = "sys-cars";
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function CarCard({ car }: { car: Car }) {
+function CarCard({ car, onSelect }: { car: Car; onSelect: (car: Car) => void }) {
   const [imgError, setImgError] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const monthly = calcMonthly(car.price, 2000, 36);
   const isUnavailable = car.status === "sold" || car.status === "reserved";
   const buttonLabel = car.status === "sold" ? "Sold" : car.status === "reserved" ? "Reserved" : "View Details";
 
@@ -246,12 +245,10 @@ function CarCard({ car }: { car: Car }) {
           >
             {formatPrice(car.price)}
           </span>
-          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
-            or from £{monthly}/mo · Rep. 6.9% APR
-          </div>
         </div>
 
         <button
+          onClick={() => !isUnavailable && onSelect(car)}
           style={{
             width: "100%",
             background: "#dc2626",
@@ -267,7 +264,7 @@ function CarCard({ car }: { car: Car }) {
             pointerEvents: isUnavailable ? "none" : "auto",
           }}
           onMouseEnter={(e) =>
-            ((e.currentTarget as HTMLButtonElement).style.background = "#b91c1c")
+            !isUnavailable && ((e.currentTarget as HTMLButtonElement).style.background = "#b91c1c")
           }
           onMouseLeave={(e) =>
             ((e.currentTarget as HTMLButtonElement).style.background = "#dc2626")
@@ -280,12 +277,168 @@ function CarCard({ car }: { car: Car }) {
   );
 }
 
+// ─── Car Detail Modal ─────────────────────────────────────────────────────────
+
+function CarModal({ car, onClose, onEnquire }: { car: Car; onClose: () => void; onEnquire: (carName: string) => void }) {
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [imgError, setImgError] = useState(false);
+
+  const photos: string[] = car.photoUrls?.length
+    ? car.photoUrls
+    : car.photoUrl
+    ? [car.photoUrl]
+    : [`https://images.unsplash.com/photo-${car.photoId}?w=900&q=80&auto=format`];
+
+  // Close on backdrop click
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  // Prevent body scroll while open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const carName = `${car.year} ${car.make} ${car.model}`;
+
+  return (
+    <div
+      onClick={handleBackdrop}
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "16px",
+      }}
+    >
+      <div
+        style={{
+          background: "#111118", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "20px", width: "100%", maxWidth: "780px",
+          maxHeight: "90vh", overflowY: "auto",
+        }}
+      >
+        {/* Image gallery */}
+        <div style={{ position: "relative", height: "320px", borderRadius: "20px 20px 0 0", overflow: "hidden", background: "#0a0a0f" }}>
+          {!imgError ? (
+            <img
+              src={photos[photoIndex]}
+              alt={carName}
+              style={{ width: "100%", height: "100%", objectFit: "cover", transition: "opacity 0.15s" }}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "#475569" }}>{carName}</span>
+            </div>
+          )}
+
+          {/* Arrows */}
+          {photos.length > 1 && (
+            <>
+              <button onClick={() => setPhotoIndex((i) => (i - 1 + photos.length) % photos.length)}
+                style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>‹</button>
+              <button onClick={() => setPhotoIndex((i) => (i + 1) % photos.length)}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>›</button>
+              {/* Dots */}
+              <div style={{ position: "absolute", bottom: "10px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "6px" }}>
+                {photos.map((_, i) => (
+                  <button key={i} onClick={() => setPhotoIndex(i)}
+                    style={{ width: i === photoIndex ? "20px" : "7px", height: "7px", borderRadius: "4px", background: i === photoIndex ? "#dc2626" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", padding: 0, transition: "width 0.2s" }} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Thumbnail strip */}
+          {photos.length > 1 && (
+            <div style={{ position: "absolute", bottom: "32px", left: "12px", display: "flex", gap: "6px" }}>
+              {photos.map((src, i) => (
+                <button key={i} onClick={() => setPhotoIndex(i)}
+                  style={{ width: "52px", height: "40px", borderRadius: "6px", overflow: "hidden", border: i === photoIndex ? "2px solid #dc2626" : "2px solid transparent", cursor: "pointer", padding: 0, background: "transparent", opacity: i === photoIndex ? 1 : 0.6, transition: "opacity 0.2s, border-color 0.2s" }}>
+                  <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Close button */}
+          <button onClick={onClose}
+            style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.65)", border: "none", color: "#fff", width: "32px", height: "32px", borderRadius: "50%", cursor: "pointer", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+
+          {/* Status badge */}
+          {car.status !== "available" && (
+            <div style={{ position: "absolute", top: "12px", left: "12px", background: car.status === "sold" ? "#dc2626" : "#f59e0b", color: "#fff", fontWeight: 800, fontSize: "13px", padding: "4px 12px", borderRadius: "6px", letterSpacing: "0.06em" }}>
+              {car.status === "sold" ? "SOLD" : "RESERVED"}
+            </div>
+          )}
+        </div>
+
+        {/* Details */}
+        <div style={{ padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "20px" }}>
+            <div>
+              <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{carName}</h2>
+              <span style={{ color: "#94a3b8", fontSize: "14px" }}>{car.color}</span>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#dc2626" }}>{formatPrice(car.price)}</div>
+            </div>
+          </div>
+
+          {/* Specs grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px", marginBottom: "24px" }}>
+            {[
+              { label: "Year", value: String(car.year) },
+              { label: "Mileage", value: car.mileage + " mi" },
+              { label: "Fuel", value: car.fuel },
+              { label: "Transmission", value: car.transmission },
+              { label: "Colour", value: car.color },
+              ...(car.badge ? [{ label: "Badge", value: car.badge }] : []),
+            ].map((spec) => (
+              <div key={spec.label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "12px 14px" }}>
+                <div style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>{spec.label}</div>
+                <div style={{ fontSize: "15px", fontWeight: 600, color: "#fff" }}>{spec.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          {car.status === "available" ? (
+            <button
+              onClick={() => { onClose(); onEnquire(carName); }}
+              style={{ width: "100%", background: "#dc2626", color: "#09090f", border: "none", borderRadius: "12px", padding: "14px", fontWeight: 800, fontSize: "15px", cursor: "pointer", transition: "background 0.2s" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#b91c1c")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#dc2626")}
+            >
+              Enquire About This Car
+            </button>
+          ) : (
+            <div style={{ textAlign: "center", color: "#64748b", fontSize: "14px", padding: "14px", background: "rgba(255,255,255,0.03)", borderRadius: "12px" }}>
+              This vehicle is no longer available. <a href="#contact" onClick={onClose} style={{ color: "#dc2626" }}>Contact us</a> about similar cars.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SYSVehiclesPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cars, setCars] = useState<Car[]>(DEFAULT_CARS as Car[]);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -331,10 +484,25 @@ export default function SYSVehiclesPage() {
     setFormSubmitted(true);
   };
 
+  const handleEnquire = (carName: string) => {
+    setFormData((prev) => ({ ...prev, car: carName }));
+    setTimeout(() => {
+      document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
   const navLinks = ["Cars", "About", "Contact"];
 
   return (
     <div style={{ background: "#09090f", minHeight: "100vh" }}>
+      {/* ── Car Detail Modal ── */}
+      {selectedCar && (
+        <CarModal
+          car={selectedCar}
+          onClose={() => setSelectedCar(null)}
+          onEnquire={handleEnquire}
+        />
+      )}
       {/* ── SECTION 1: Navigation ─────────────────────────────────────────── */}
       <nav
         style={{
@@ -866,7 +1034,7 @@ export default function SYSVehiclesPage() {
             }}
           >
             {filteredCars.map((car) => (
-              <CarCard key={car.id} car={car} />
+              <CarCard key={car.id} car={car} onSelect={setSelectedCar} />
             ))}
           </div>
         )}
