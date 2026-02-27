@@ -36,7 +36,8 @@ type Car = {
   color: string;
   badge: string;
   photoId: string;
-  photoUrl?: string; // uploaded image — takes priority over photoId
+  photoUrl?: string;    // legacy single
+  photoUrls?: string[]; // multiple uploaded photos
   category: string[];
   status: "available" | "sold" | "reserved";
 };
@@ -66,9 +67,17 @@ const STORAGE_KEY = "sys-cars";
 
 function CarCard({ car }: { car: Car }) {
   const [imgError, setImgError] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const monthly = calcMonthly(car.price, 2000, 36);
   const isUnavailable = car.status === "sold" || car.status === "reserved";
   const buttonLabel = car.status === "sold" ? "Sold" : car.status === "reserved" ? "Reserved" : "View Details";
+
+  const photos: string[] = car.photoUrls?.length
+    ? car.photoUrls
+    : car.photoUrl
+    ? [car.photoUrl]
+    : [`https://images.unsplash.com/photo-${car.photoId}?w=500&q=65&auto=format`];
+  const hasMultiple = photos.length > 1;
 
   return (
     <div
@@ -82,7 +91,7 @@ function CarCard({ car }: { car: Car }) {
       className="group hover:-translate-y-1"
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow =
-          "0 8px 32px rgba(201,165,81,0.12)";
+          "0 8px 32px rgba(220,38,38,0.12)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
@@ -92,11 +101,11 @@ function CarCard({ car }: { car: Car }) {
       <div style={{ position: "relative", height: "200px" }}>
         {!imgError ? (
           <img
-            src={car.photoUrl || `https://images.unsplash.com/photo-${car.photoId}?w=500&q=65&auto=format`}
-            alt={`${car.make} ${car.model}`}
+            src={photos[photoIndex]}
+            alt={`${car.make} ${car.model} — photo ${photoIndex + 1}`}
             loading="lazy"
             decoding="async"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", transition: "opacity 0.15s" }}
             onError={() => setImgError(true)}
           />
         ) : (
@@ -124,7 +133,7 @@ function CarCard({ car }: { car: Car }) {
               background:
                 car.badge === "Electric"
                   ? "#3b82f6"
-                  : "rgba(201,165,81,0.9)",
+                  : "rgba(220,38,38,0.9)",
               color: "#fff",
               fontSize: "11px",
               fontWeight: 700,
@@ -161,6 +170,31 @@ function CarCard({ car }: { car: Car }) {
               {car.status === "sold" ? "SOLD" : "RESERVED"}
             </span>
           </div>
+        )}
+
+        {/* Gallery controls — only shown when multiple photos */}
+        {hasMultiple && (
+          <>
+            {/* Prev / Next arrows */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setPhotoIndex((i) => (i - 1 + photos.length) % photos.length); }}
+              style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", width: "28px", height: "28px", borderRadius: "50%", cursor: "pointer", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >‹</button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setPhotoIndex((i) => (i + 1) % photos.length); }}
+              style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", width: "28px", height: "28px", borderRadius: "50%", cursor: "pointer", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >›</button>
+            {/* Dot indicators */}
+            <div style={{ position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "5px" }}>
+              {photos.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setPhotoIndex(i); }}
+                  style={{ width: i === photoIndex ? "16px" : "6px", height: "6px", borderRadius: "3px", background: i === photoIndex ? "#dc2626" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", padding: 0, transition: "width 0.2s, background 0.2s" }}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_CARS } from "@/lib/cars-data";
 
 type Car = {
@@ -15,7 +15,8 @@ type Car = {
   color: string;
   badge: string;
   photoId: string;
-  photoUrl?: string; // base64 or URL — takes priority over photoId
+  photoUrl?: string;    // legacy single photo (kept for compat)
+  photoUrls?: string[]; // multiple uploaded photos — takes priority
   category: string[];
   status: "available" | "reserved" | "sold";
 };
@@ -44,52 +45,48 @@ function buildCategory(price: number, fuel: string, model: string) {
   return categories;
 }
 
+const inputStyle: React.CSSProperties = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.2)",
+  color: "#fff",
+  borderRadius: "8px",
+  padding: "10px 12px",
+  width: "100%",
+  fontSize: "14px",
+};
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [error, setError] = useState("");
+
+  // ── Car state ──────────────────────────────────────────────────────────────
   const [cars, setCars] = useState<Car[]>(DEFAULT_CARS as Car[]);
+  // loaded ref prevents the save effect from running before the initial load
+  const loaded = useRef(false);
+
+  // ── Form state ─────────────────────────────────────────────────────────────
   const [formData, setFormData] = useState({
-    make: "",
-    model: "",
-    year: "",
-    price: "",
-    mileage: "",
-    fuel: "",
-    transmission: "",
-    color: "",
-    badge: "",
+    make: "", model: "", year: "", price: "",
+    mileage: "", fuel: "", transmission: "", color: "", badge: "",
   });
-  const [photoPreview, setPhotoPreview] = useState<string>("");
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setPhotoPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
+  // ── Load from localStorage after login ────────────────────────────────────
   useEffect(() => {
     if (!authenticated) return;
-
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      setCars(DEFAULT_CARS as Car[]);
-      return;
+    if (raw) {
+      try { setCars(JSON.parse(raw) as Car[]); } catch { /* keep defaults */ }
     }
-
-    try {
-      setCars(JSON.parse(raw) as Car[]);
-    } catch {
-      setCars(DEFAULT_CARS as Car[]);
-    }
+    loaded.current = true;
   }, [authenticated]);
 
+  // ── Save to localStorage — only AFTER initial load ────────────────────────
   useEffect(() => {
-    if (!authenticated) return;
+    if (!loaded.current) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cars));
-  }, [authenticated, cars]);
+  }, [cars]);
 
   const nextId = useMemo(
     () => (cars.length ? Math.max(...cars.map((c) => c.id)) + 1 : 1),
@@ -98,26 +95,38 @@ export default function AdminPage() {
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setAuthenticated(true);
-      setError("");
-      return;
-    }
+    if (password === ADMIN_PASSWORD) { setAuthenticated(true); setError(""); return; }
     setError("Incorrect password");
   };
 
-  const updateStatus = (id: number, status: Car["status"]) => {
-    setCars((prev) => prev.map((car) => (car.id === id ? { ...car, status } : car)));
-  };
+  const updateStatus = (id: number, status: Car["status"]) =>
+    setCars((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
 
   const deleteCar = (id: number) => {
     if (!confirm("Remove this car from the listing?")) return;
-    setCars((prev) => prev.filter((car) => car.id !== id));
+    setCars((prev) => prev.filter((c) => c.id !== id));
   };
 
+  // ── Photo upload ───────────────────────────────────────────────────────────
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        setPhotoPreviews((prev) => [...prev, reader.result as string]);
+      reader.readAsDataURL(file);
+    });
+    // reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const removePhoto = (index: number) =>
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+
+  // ── Add car ────────────────────────────────────────────────────────────────
   const handleAddCar = (e: FormEvent) => {
     e.preventDefault();
-
     const price = Number(formData.price);
     const year = Number(formData.year);
     const photoId = STARTER_PHOTO_IDS[(nextId - 1) % STARTER_PHOTO_IDS.length];
@@ -126,47 +135,32 @@ export default function AdminPage() {
       id: nextId,
       make: formData.make.trim(),
       model: formData.model.trim(),
-      year,
-      price,
+      year, price,
       mileage: formData.mileage.trim(),
       fuel: formData.fuel.trim(),
       transmission: formData.transmission.trim(),
       color: formData.color.trim(),
       badge: formData.badge.trim(),
       photoId,
-      ...(photoPreview ? { photoUrl: photoPreview } : {}),
+      ...(photoPreviews.length > 0 ? { photoUrls: photoPreviews } : {}),
       category: buildCategory(price, formData.fuel.trim(), formData.model.trim()),
       status: "available",
     };
 
     setCars((prev) => [...prev, newCar]);
-    setFormData({
-      make: "",
-      model: "",
-      year: "",
-      price: "",
-      mileage: "",
-      fuel: "",
-      transmission: "",
-      color: "",
-      badge: "",
-    });
-    setPhotoPreview("");
+    setFormData({ make: "", model: "", year: "", price: "", mileage: "", fuel: "", transmission: "", color: "", badge: "" });
+    setPhotoPreviews([]);
   };
 
+  // ── Login screen ───────────────────────────────────────────────────────────
   if (!authenticated) {
     return (
       <main style={{ minHeight: "100vh", background: "#09090f", color: "#fff", padding: "40px 24px" }}>
         <div style={{ maxWidth: "420px", margin: "60px auto", background: "#111118", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "14px", padding: "28px" }}>
           <h1 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "16px" }}>SYS Admin</h1>
           <form onSubmit={handleLogin}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter admin password"
-              style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", color: "#fff", padding: "10px 12px", marginBottom: "12px" }}
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter admin password" style={{ ...inputStyle, marginBottom: "12px" }} />
             {error && <p style={{ color: "#ef4444", marginBottom: "10px", fontSize: "13px" }}>{error}</p>}
             <button type="submit" style={{ width: "100%", background: "#dc2626", border: "none", color: "#fff", borderRadius: "8px", padding: "10px", fontWeight: 700, cursor: "pointer" }}>
               Login
@@ -177,42 +171,53 @@ export default function AdminPage() {
     );
   }
 
+  // ── Main admin ─────────────────────────────────────────────────────────────
   return (
     <main style={{ minHeight: "100vh", background: "#09090f", color: "#fff", padding: "32px 20px 60px" }}>
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         <h1 style={{ fontSize: "30px", fontWeight: 900, marginBottom: "20px" }}>Vehicle Status Admin</h1>
 
+        {/* ── Car Table ── */}
         <div style={{ overflowX: "auto", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", marginBottom: "30px" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "760px" }}>
             <thead>
               <tr style={{ background: "rgba(255,255,255,0.04)" }}>
-                <th style={{ textAlign: "left", padding: "12px" }}>Car</th>
-                <th style={{ textAlign: "left", padding: "12px" }}>Year</th>
-                <th style={{ textAlign: "left", padding: "12px" }}>Price</th>
-                <th style={{ textAlign: "left", padding: "12px" }}>Status</th>
-                <th style={{ textAlign: "left", padding: "12px" }}>Actions</th>
+                {["Car", "Year", "Price", "Status", "Actions"].map((h) => (
+                  <th key={h} style={{ textAlign: "left", padding: "12px", fontSize: "13px", color: "#94a3b8" }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {cars.map((car) => (
                 <tr key={car.id} style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                  <td style={{ padding: "12px" }}>{car.make} {car.model}</td>
+                  <td style={{ padding: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
+                    {/* Thumbnail */}
+                    <div style={{ width: "48px", height: "36px", borderRadius: "6px", overflow: "hidden", flexShrink: 0, background: "#1a1a26" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={(car.photoUrls?.[0] ?? car.photoUrl) || `https://images.unsplash.com/photo-${car.photoId}?w=100&q=60&auto=format`}
+                        alt={`${car.make} ${car.model}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </div>
+                    <span>{car.make} {car.model}</span>
+                  </td>
                   <td style={{ padding: "12px" }}>{car.year}</td>
                   <td style={{ padding: "12px" }}>£{car.price.toLocaleString("en-GB")}</td>
                   <td style={{ padding: "12px", textTransform: "capitalize" }}>{car.status}</td>
-                  <td style={{ padding: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <button onClick={() => updateStatus(car.id, "available")} style={{ background: car.status === "available" ? "#22c55e" : "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer" }}>
-                      Available
-                    </button>
-                    <button onClick={() => updateStatus(car.id, "reserved")} style={{ background: car.status === "reserved" ? "#f59e0b" : "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer" }}>
-                      Reserved
-                    </button>
-                    <button onClick={() => updateStatus(car.id, "sold")} style={{ background: car.status === "sold" ? "#dc2626" : "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer" }}>
-                      Sold
-                    </button>
-                    <button onClick={() => deleteCar(car.id)} style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", marginLeft: "4px" }}>
-                      🗑 Remove
-                    </button>
+                  <td style={{ padding: "12px" }}>
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      {(["available", "reserved", "sold"] as Car["status"][]).map((s) => (
+                        <button key={s} onClick={() => updateStatus(car.id, s)}
+                          style={{ background: car.status === s ? (s === "available" ? "#22c55e" : s === "reserved" ? "#f59e0b" : "#dc2626") : "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", textTransform: "capitalize", fontSize: "12px" }}>
+                          {s}
+                        </button>
+                      ))}
+                      <button onClick={() => deleteCar(car.id)}
+                        style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px", padding: "6px 10px", cursor: "pointer", fontSize: "12px" }}>
+                        🗑 Remove
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -220,131 +225,111 @@ export default function AdminPage() {
           </table>
         </div>
 
+        {/* ── Add Car Form ── */}
         <div style={{ background: "#111118", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "14px", padding: "24px" }}>
           <h2 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "16px" }}>Add New Car</h2>
-          <form onSubmit={handleAddCar} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-            {[
-              { key: "make", label: "Make" },
-              { key: "model", label: "Model" },
-              { key: "year", label: "Year", type: "number" },
-              { key: "price", label: "Price", type: "number" },
-              { key: "mileage", label: "Mileage" },
-              { key: "fuel", label: "Fuel" },
-              { key: "transmission", label: "Transmission" },
-              { key: "color", label: "Color" },
-              { key: "badge", label: "Badge" },
-            ].map((field) => (
-              <label key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#cbd5e1" }}>
-                {field.label}
-                <input
-                  required={field.key !== "badge"}
-                  type={field.type ?? "text"}
-                  value={formData[field.key as keyof typeof formData]}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "8px", padding: "10px 12px" }}
-                />
-              </label>
-            ))}
-            {/* Photo Upload */}
-            <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <label style={{ fontSize: "13px", color: "#cbd5e1", display: "flex", flexDirection: "column", gap: "6px" }}>
-                Car Photo
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <label
-                    htmlFor="photo-upload"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px dashed rgba(255,255,255,0.3)",
-                      borderRadius: "8px",
-                      padding: "10px 16px",
-                      cursor: "pointer",
-                      color: "#94a3b8",
-                      fontSize: "13px",
-                      transition: "border-color 0.2s, color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLLabelElement).style.borderColor = "#dc2626";
-                      (e.currentTarget as HTMLLabelElement).style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLLabelElement).style.borderColor = "rgba(255,255,255,0.3)";
-                      (e.currentTarget as HTMLLabelElement).style.color = "#94a3b8";
-                    }}
-                  >
-                    📷 {photoPreview ? "Change Photo" : "Upload Photo"}
-                  </label>
+          <form onSubmit={handleAddCar}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+              {[
+                { key: "make", label: "Make" },
+                { key: "model", label: "Model" },
+                { key: "year", label: "Year", type: "number" },
+                { key: "price", label: "Price (£)", type: "number" },
+                { key: "mileage", label: "Mileage (e.g. 45,000)" },
+                { key: "fuel", label: "Fuel (Petrol / Diesel / Electric)" },
+                { key: "transmission", label: "Transmission (Manual / Auto)" },
+                { key: "color", label: "Colour" },
+                { key: "badge", label: "Badge (optional, e.g. Sport)" },
+              ].map((field) => (
+                <label key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#cbd5e1" }}>
+                  {field.label}
                   <input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    style={{ display: "none" }}
+                    required={field.key !== "badge"}
+                    type={field.type ?? "text"}
+                    value={formData[field.key as keyof typeof formData]}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                    style={inputStyle}
                   />
-                  {photoPreview && (
-                    <button
-                      type="button"
-                      onClick={() => setPhotoPreview("")}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "#94a3b8",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                      }}
-                    >
-                      ✕ Remove
-                    </button>
-                  )}
-                </div>
-              </label>
+                </label>
+              ))}
+            </div>
 
-              {/* Preview */}
-              {photoPreview && (
-                <div style={{ position: "relative", width: "180px", height: "120px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                  <div style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
-                    padding: "6px 8px",
-                    fontSize: "10px",
-                    color: "#22c55e",
-                    fontWeight: 600,
-                  }}>
-                    ✓ Photo ready
-                  </div>
+            {/* ── Photo Upload Section ── */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px", marginBottom: "20px" }}>
+              <p style={{ fontSize: "13px", color: "#cbd5e1", marginBottom: "10px", fontWeight: 600 }}>
+                Car Photos <span style={{ color: "#475569", fontWeight: 400 }}>— optional, add as many as you like</span>
+              </p>
+
+              {/* Upload button */}
+              <label
+                htmlFor="photo-upload"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "8px",
+                  background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(255,255,255,0.25)",
+                  borderRadius: "8px", padding: "10px 18px", cursor: "pointer",
+                  color: "#94a3b8", fontSize: "13px", marginBottom: "14px",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLLabelElement).style.borderColor = "#dc2626";
+                  (e.currentTarget as HTMLLabelElement).style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLLabelElement).style.borderColor = "rgba(255,255,255,0.25)";
+                  (e.currentTarget as HTMLLabelElement).style.color = "#94a3b8";
+                }}
+              >
+                📷 Add Photos
+              </label>
+              <input id="photo-upload" type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: "none" }} />
+
+              {/* Preview grid */}
+              {photoPreviews.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                  {photoPreviews.map((src, i) => (
+                    <div key={i} style={{ position: "relative", width: "120px", height: "90px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`Photo ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      {/* Main label */}
+                      {i === 0 && (
+                        <div style={{ position: "absolute", top: "5px", left: "5px", background: "#dc2626", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", letterSpacing: "0.05em" }}>
+                          MAIN
+                        </div>
+                      )}
+                      {/* Remove button */}
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        style={{ position: "absolute", top: "4px", right: "4px", width: "20px", height: "20px", borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "none", color: "#fff", fontSize: "11px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {/* Add more button */}
+                  <label
+                    htmlFor="photo-upload-more"
+                    style={{ width: "120px", height: "90px", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.2)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b", fontSize: "12px", gap: "4px" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLLabelElement).style.borderColor = "#dc2626"; (e.currentTarget as HTMLLabelElement).style.color = "#fff"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLLabelElement).style.borderColor = "rgba(255,255,255,0.2)"; (e.currentTarget as HTMLLabelElement).style.color = "#64748b"; }}
+                  >
+                    <span style={{ fontSize: "20px" }}>+</span>
+                    <span>Add more</span>
+                  </label>
+                  <input id="photo-upload-more" type="file" accept="image/*" multiple onChange={handlePhotoUpload} style={{ display: "none" }} />
                 </div>
               )}
 
-              {!photoPreview && (
-                <p style={{ fontSize: "11px", color: "#475569" }}>
-                  Optional — if no photo is uploaded, a stock image will be used.
+              {photoPreviews.length === 0 && (
+                <p style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>
+                  First photo selected becomes the main listing image. No photo? A stock image is used.
                 </p>
               )}
             </div>
 
-            <div style={{ gridColumn: "1 / -1" }}>
-              <button type="submit" style={{ background: "#dc2626", border: "none", color: "#fff", borderRadius: "8px", padding: "10px 14px", fontWeight: 700, cursor: "pointer" }}>
-                Add Car
-              </button>
-            </div>
+            <button type="submit" style={{ background: "#dc2626", border: "none", color: "#fff", borderRadius: "8px", padding: "10px 20px", fontWeight: 700, cursor: "pointer", fontSize: "14px" }}>
+              ＋ Add Car to Listing
+            </button>
           </form>
         </div>
       </div>
